@@ -1,0 +1,203 @@
+Terminales-----------------------
+	
+	mas-> '+'
+	mens-> '-'
+	multi-> '*'
+	div-> '//'
+	mod-> '~'
+	pote-> '**'
+
+	eql-> '='
+
+	isEqu-> '=='
+	mayQue-> '>'
+	menQue-> '<'
+	mayEquQue-> '>='
+	menEquQue-> '<='
+	dife-> '!='
+	sumUn-> '++'
+	resUn-> '--' 
+	
+	endExp-> '?'
+	
+	dot-> '.'
+	comma-> ','
+	dosDot-> ':'
+	parentIz-> '('
+	parentDe-> ')'
+	
+	main-> 'main'
+
+	true-> lun
+	false-> sol
+
+	and-> '^'
+	or-> '#'
+	neg-> '!'
+
+	iniBlock-> '\'
+	endBlock-> '/'
+
+	if-> 'if'
+	elif-> 'elif'
+	else-> 'else'
+
+	do-> 'do'
+	while-> 'while'
+	break-> 'break'
+	for-> 'for'
+	return-> 'return'
+	
+ 	read-> 'leer'
+	print-> 'impr'
+
+	arreg-> 'arrx' 
+	matrix-> 'matrx'
+
+	funcion-> 'func'
+	void-> 'void'
+	parametro-> 'param'
+
+	numEnt-> [0-9]+
+	numFlo-> [1-9].?[0-9]*
+	char-> [a-zA-Z_]
+
+No Terminales------------------------
+
+	main-> expr
+	
+	expr-> expr expr endExp
+	expr-> opera endExp
+	expr-> bool endExp
+	expr-> ifBloc endExp
+	expr-> doWhile endExp
+	expr-> break endExp
+	expr-> forBloc endExp
+	expr-> return endExp
+	expr-> blocComment endExp
+	expr-> comment endExp
+	expr-> num endExp
+	expr-> char endExp	
+	expr-> cadena endExp
+	expr-> bloc endExp
+	expr-> params endExp
+	expr-> var endExp
+	expr-> func endExp
+	expr-> lista endExp
+	expr-> matrix endExp
+
+	bool-> true | false
+
+	cadena-> char+
+	block-> iniBlock expr endBlock
+
+	comment-> @ expr
+
+	num-> numEnt | numFlo
+
+	id-> [num cadena]*
+
+	suma-> num mas num 
+	resta-> num mens num 
+	multipli-> num multi num 
+	divisi-> num div num 
+	modul-> num mod num 
+	poten-> num pot num 
+	opAritComb-> (num | id) ([mas mens multi div mod pot] (num | id))*
+	opArit-> suma | resta | multipli | divisi | modul | poten | opAritComb
+
+	isEqual-> num isEqu num | id isEqu id | cadena isEqu cadena | bool isEqu bool | lista isEqu lista | matrix isEqu matrix
+	isDiffe-> num dife num | id dife id | cadena dife cadena | bool dife bool | lista isEqu lista | matrix isEqu matrix
+	mayrQue-> num mayrQue num | lista mayrQue lista | matrix mayrQue matrix
+	menrQue-> num menrQue num | lista menrQue lista | matrix menrQue matrix
+	mayrEquQue-> num mayrEquQue num | lista mayrEquQue lista | matrix mayrEquQue matrix
+	menrEquQue-> num menrEquQue num | lista menrEquQue lista | matrix mayrEquQue matrix
+	opRela-> isEqual | isDiffe | mayrQue | menrQue | mayrEquQue | menrEquQue
+
+	conjun-> bool and bool
+	disyun-> bool or bool
+	nega-> neg bool
+	opLogi-> conjun | disyun | nega
+
+	sumUnar-> sumUn num | sumUn id
+	restUnar-> resUn num | resUn id
+	opUnar-> sumUnar | restUnar
+
+	opera-> opArit | opRela | opLogi | opUnar
+
+	param-> bool
+	params-> param ((comma param)*)?
+	
+	ifStruc-> if parentIz params parentDe block elif?  
+	elifStruc-> elif parentIz params parentDe block elif?
+	elseStruc-> else initBlock expr endBlock
+	ifBloc-> ifStruc elseStruct
+
+	doWhile-> do block while parentIz params parentDe 
+
+	forBloc-> for parentIz params parentDe bloc	
+
+	switchBloc-> switch parentIz condicion parentDe iniBloc caseBloc+ defaultBloc endBloc
+	caseBloc-> case (numEnt | char) dosDot expr endExpr 
+	break
+	default-> expr
+
+	stBComment-> {
+	endBComment->}
+	blocComment-> stBComment expr endBComment
+
+	stBloc-> \
+	endBloc-> /
+	bloc-> stBloc expr endBloc
+	
+	ent-> numEnt
+	flota-> numFlo
+	tipo-> ent | flota | char | cadena | matrix
+
+        
+	globalVar-> global tipo id  -------------------------------------poner atención al scope------------------------------------------
+	globalVar-> global tipo id eql [num,char,cadena,matrix,bool,expr]
+
+	var-> tipo id
+	var-> tipo id eql [num,char,cadena,matrix,bool]
+
+	asign-> id eql id
+	asign-> id eql [num,char,cadena,matrix,bool,expr]
+
+	structBloc-> struct id initBloc attributeBloc+ endBloc endExpr
+	attributeBloc-> (numEnt | numFlo | char) id endExpr
+	attributeBloc-> (numEnt | numFlo | char) id eql (numEnt | numFlo | char)
+	
+	structValue-> id dot val endExpr ---------------revisar esto ----------------------------
+	
+	lista-> tipo id \| numEnt (\| numEnt)* \| (Creo que asi es la buena)
+	elemntArre -> id \[ numEnt \]
+	modifArrePos -> id \[ numEnt \] eql numEnt
+	
+	lista-> \[ ( numEnt ( \, numEnt)* )? \]
+	listaAsig-> numEnt list | numEnt (, numEnt)* | ?   lista1[1,2,3,4,5,6...]
+
+	matrix->  \[ ( lista ( \, lista)* )? \]
+	matrixCreAsig-> numEnt matr (|numEnt (, numEnt)*|)(,(|numEnt (, numEnt)*|))?? matriz[[1,2,3,4,5],[4,5,6,7,8]]
+	matrixAsig-> id eql \[ ( lista ( \, lista)* )? \]
+	elementoMatrix-> id \[ numEnt \]\[ numEnt \]
+	
+
+	return-> expr
+	
+	func-> tipo id
+	func-> tipo id parentIz params parentDe bloc 
+	
+	cometario -> \@ cadena 
+	cometarios -> \{ cadena \}
+	
+	read -> "leer" \( cadena \) endExpr
+	print -> "impr" \( cadena \) endExpr
+
+	if -> "if" \( comparacion \) bloc elif* else?
+	elif -> "elif" \( comparacion \) bloc
+	else -> "else" bloc
+	
+	doWhile -> "do" bloc "while" \( comparacion \) endExpr
+	break -> "break" endExpr
+	for -> "for" \( tipo id \= num \; comparacion \; id ++ \) bloc
