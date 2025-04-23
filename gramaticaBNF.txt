@@ -23,8 +23,8 @@ Terminales-----------------------
 	dot-> '.'
 	comma-> ','
 	dosDot-> ':'
-	parentIz-> '('
-	parentDe-> ')'
+	parentIz-> '&'
+	parentDe-> '&'
 	
 	main-> 'main'
 
