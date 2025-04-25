@@ -3,12 +3,45 @@
  */
 package org.example;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 public class App {
+
+    public static void GenerarLexerParser()throws Exception{
+        String basePath, fullPathLexer, fullPathparser, jlexer, jparser, jlexerCarpeta;
+        MainFlexCup mfjc;
+        
+        basePath = System.getProperty("user.dir");
+        System.out.println(basePath);
+        mfjc = new MainFlexCup();
+        
+        //genera el analizador léxico y sintáctico
+        
+        fullPathLexer = basePath+"\\app\\src\\Adicionales\\BasicLexerCup.jflex";
+        fullPathparser = basePath+"\\app\\src\\Adicionales\\BasicParser.cup";
+
+        //.java de parser y lexer
+        jparser = "parser.java";
+        jlexer = "BasicLexerCup.java";
+        jlexerCarpeta = "Adicionales";
+        //elimina archivos
+        Files.deleteIfExists(Paths.get(basePath+"\\app\\src\\main\\java\\ParserLexer\\sym.java"));
+        Files.deleteIfExists(Paths.get(basePath+"\\app\\src\\main\\java\\ParserLexer\\"+jparser));
+        Files.deleteIfExists(Paths.get(basePath+"\\app\\src\\main\\java\\ParserLexer\\"+jlexer));
+        
+        mfjc.iniLexerParser(fullPathLexer, fullPathparser);
+        //mover archivos
+        Files.move (Paths.get(basePath+"\\sym.java"), Paths.get(basePath+"\\app\\src\\main\\java\\org\\example\\ParserLexer\\sym.java"));
+        Files.move (Paths.get(basePath+"\\"+jparser), Paths.get(basePath+"\\app\\src\\main\\java\\org\\example\\ParserLexer\\"+jparser));
+        Files.move (Paths.get(basePath+"\\app\\src\\"+jlexerCarpeta+"\\"+jlexer), Paths.get(basePath+"\\app\\src\\main\\java\\org\\example\\ParserLexer\\"+jlexer));
+    }
+
     public String getGreeting() {
         return "Hello World!";
     }
 
-    public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+    public static void main(String[] args) throws Exception {
+        GenerarLexerParser();
     }
 }

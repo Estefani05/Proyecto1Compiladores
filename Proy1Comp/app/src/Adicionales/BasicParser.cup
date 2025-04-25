@@ -1,0 +1,68 @@
+package ParserLexer;
+import java_cup.runtime .*;
+
+//utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios de lo tomado de la página de cup
+//cambios en parser code, init with y scan with {:
+
+action code {:
+    /*CODIGO DE JAVA
+    https://www.jflex.de/
+    http://www2.cs.tum.edu/projects/cup/examples.php*/
+
+    public void hola(){
+        System.out.println("Hola");
+    }
+
+    public void adios(){
+        System.out.println("Adiós");
+    }
+:}
+
+parser code {:
+    // Connect this parser to a scanner!
+    BasicLexerCup lex;
+
+    @SuppressWarnings("deprecation")
+    public parser(BasicLexerCup lex){
+        this.lex=lex;
+        this.symbolFactory = new DefaultSymbolFactory();
+    }
+:}
+
+init with {: :};
+
+/* define how to connect to the scanner! */
+scan with {: return lex.next_token(); :};
+
+/* Terminales (tokens retornados por el scanner). */
+terminal INTEGER_T, CHAR_T, COMPARACION, ASIGNA, SUMA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL; /* Generales */
+terminal INTEGER, FLOAT, BOOL, CHAR, STRING; /* Tipos */
+terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS; /* Estructura */
+terminal BLOQUE_A, BLOQUE_C; /* Estructura */
+terminal MAIN; /* Estructura */
+terminal CORCHETE_A, CORCHETE_C; /* Simbolos */
+terminal PARENTESIS_A, PARENTESIS_C; /* Simbolos */
+terminal ASIGNACION; /* Simbolos */
+terminal DELIMITADOR; /* Simbolos */
+terminal RESTA, DIVISION, MULTIPLICACION, MODULO, POTENCIA, INCREMENTO, DECREMENTO; /* Operadores aritméticos*/
+terminal MENOR, MENOR_IGUAL, MAYOR, MAYOR_IGUAL, IGUALDAD, DIFERENTE; /* Operadores relacionales */
+terminal CONJUNCION, DISYUNCION, NEGACION; /* Operadores logicos */
+terminal IF, ELSE, WHILE, FOR, SWITCH, CASE, DEFAULT, BREAK, RETURN, DOS_PUNTOS;
+terminal PRINT, READ; /* Operaciones de lectura */
+
+/* No terminales */
+non terminal programa, programaAux;
+
+/* Producción de inicio */
+start with programa;
+
+/* Reglas de producción */
+programa ::= 
+    MAIN PARENTESIS_A PARENTESIS_C BLOQUE_A programaAux BLOQUE_C
+    ;
+
+programaAux ::= 
+    /* Puedes definir aquí las reglas para el cuerpo del programa */
+    ;
+
+/* Estructuras de control */
