@@ -23,8 +23,9 @@ Terminales-----------------------
 	dot-> '.'
 	comma-> ','
 	dosDot-> ':'
-	parentIz-> '&'
-	parentDe-> '&'
+	parentIz-> 'ʃ'
+	parentDe-> 'ʅ'
+	pipe-> '|'
 	
 	main-> 'main'
 
@@ -35,8 +36,8 @@ Terminales-----------------------
 	or-> '#'
 	neg-> '!'
 
-	iniBlock-> '\'
-	endBlock-> '/'
+	iniBloc-> '\'
+	endBloc-> '/'
 
 	if-> 'if'
 	elif-> 'elif'
@@ -52,17 +53,28 @@ Terminales-----------------------
 	print-> 'impr'
 
 	arreg-> 'arrx' 
-	matrix-> 'matrx'
+	matriz-> 'matrx'
 
 	funcion-> 'func'
 	void-> 'void'
 	parametro-> 'param'
+	global-> 'global'
+
+	struct-> struct
 
 	numEnt-> [0-9]+
 	numFlo-> [1-9].?[0-9]*
 	char-> [a-zA-Z_]
 
+	stBloc-> \
+	endBloc-> /
+
+	stBComment-> {
+	endBComment->}
+	
+
 No Terminales------------------------
+
 
 	main-> expr
 	
@@ -83,121 +95,131 @@ No Terminales------------------------
 	expr-> params endExp
 	expr-> var endExp
 	expr-> func endExp
-	expr-> lista endExp
-	expr-> matrix endExp
+	expr-> arrx endExp
+	expr-> matrx endExp
 
-	bool-> true | false
+	bloc-> stBloc expr endBloc
+	Bloc-> iniBloc expr endBloc
+
+	bool-> luna | sol
 
 	cadena-> char+
-	block-> iniBlock expr endBlock
-
+	
 	comment-> @ expr
+	blocComment-> stBComment expr endBComment
+
+	lineComent -> \@ cadena 
+	blocComment -> \{ cadena \}
+	comment-> lineComment | blocComment
 
 	num-> numEnt | numFlo
 
 	id-> [num cadena]*
 
-	suma-> num mas num 
-	resta-> num mens num 
-	multipli-> num multi num 
-	divisi-> num div num 
-	modul-> num mod num 
-	poten-> num pot num 
-	opAritComb-> (num | id) ([mas mens multi div mod pot] (num | id))*
-	opArit-> suma | resta | multipli | divisi | modul | poten | opAritComb
-
-	isEqual-> num isEqu num | id isEqu id | cadena isEqu cadena | bool isEqu bool | lista isEqu lista | matrix isEqu matrix
-	isDiffe-> num dife num | id dife id | cadena dife cadena | bool dife bool | lista isEqu lista | matrix isEqu matrix
-	mayrQue-> num mayrQue num | lista mayrQue lista | matrix mayrQue matrix
-	menrQue-> num menrQue num | lista menrQue lista | matrix menrQue matrix
-	mayrEquQue-> num mayrEquQue num | lista mayrEquQue lista | matrix mayrEquQue matrix
-	menrEquQue-> num menrEquQue num | lista menrEquQue lista | matrix mayrEquQue matrix
-	opRela-> isEqual | isDiffe | mayrQue | menrQue | mayrEquQue | menrEquQue
-
-	conjun-> bool and bool
-	disyun-> bool or bool
-	nega-> neg bool
-	opLogi-> conjun | disyun | nega
-
-	sumUnar-> sumUn num | sumUn id
-	restUnar-> resUn num | resUn id
-	opUnar-> sumUnar | restUnar
-
-	opera-> opArit | opRela | opLogi | opUnar
-
-	param-> bool
-	params-> param ((comma param)*)?
-	
-	ifStruc-> if parentIz params parentDe block elif?  
-	elifStruc-> elif parentIz params parentDe block elif?
-	elseStruc-> else initBlock expr endBlock
-	ifBloc-> ifStruc elseStruct
-
-	doWhile-> do block while parentIz params parentDe 
-
-	forBloc-> for parentIz params parentDe bloc	
-
-	switchBloc-> switch parentIz condicion parentDe iniBloc caseBloc+ defaultBloc endBloc
-	caseBloc-> case (numEnt | char) dosDot expr endExpr 
-	break
-	default-> expr
-
-	stBComment-> {
-	endBComment->}
-	blocComment-> stBComment expr endBComment
-
-	stBloc-> \
-	endBloc-> /
-	bloc-> stBloc expr endBloc
-	
-	ent-> numEnt
-	flota-> numFlo
-	tipo-> ent | flota | char | cadena | matrix
-
-        
-	globalVar-> global tipo id  -------------------------------------poner atención al scope------------------------------------------
-	globalVar-> global tipo id eql [num,char,cadena,matrix,bool,expr]
-
-	var-> tipo id
-	var-> tipo id eql [num,char,cadena,matrix,bool]
-
-	asign-> id eql id
-	asign-> id eql [num,char,cadena,matrix,bool,expr]
-
-	structBloc-> struct id initBloc attributeBloc+ endBloc endExpr
-	attributeBloc-> (numEnt | numFlo | char) id endExpr
-	attributeBloc-> (numEnt | numFlo | char) id eql (numEnt | numFlo | char)
-	
-	structValue-> id dot val endExpr ---------------revisar esto ----------------------------
-	
-	lista-> tipo id \| numEnt (\| numEnt)* \| (Creo que asi es la buena)
-	elemntArre -> id \[ numEnt \]
-	modifArrePos -> id \[ numEnt \] eql numEnt
-	
-	lista-> \[ ( numEnt ( \, numEnt)* )? \]
-	listaAsig-> numEnt list | numEnt (, numEnt)* | ?   lista1[1,2,3,4,5,6...]
-
-	matrix->  \[ ( lista ( \, lista)* )? \]
-	matrixCreAsig-> numEnt matr (|numEnt (, numEnt)*|)(,(|numEnt (, numEnt)*|))?? matriz[[1,2,3,4,5],[4,5,6,7,8]]
-	matrixAsig-> id eql \[ ( lista ( \, lista)* )? \]
-	elementoMatrix-> id \[ numEnt \]\[ numEnt \]
-	
-
 	return-> expr
 	
-	func-> tipo id
-	func-> tipo id parentIz params parentDe bloc 
-	
-	cometario -> \@ cadena 
-	cometarios -> \{ cadena \}
-	
-	read -> "leer" \( cadena \) endExpr
-	print -> "impr" \( cadena \) endExpr
+	read -> "leer" parentIz cadena parentDe
+	print -> "impr" parentIz cadena parentDe
 
-	if -> "if" \( comparacion \) bloc elif* else?
-	elif -> "elif" \( comparacion \) bloc
-	else -> "else" bloc
+----------------------------------------------------------------numeros--------------------------------------------
+	ent-> numEnt
+	flota-> numFlo
+	tipo-> void | ent | flota | char | cadena | arrx | matrx | structBloc
+
+
+--------------------------------------------------------------variables y tipos---------------------------------------- 
+	creaGlobalVar-> global tipo id 
+	asigGlobalVar-> crearGlobalVar eql [num char cadena arrx matrx bool structBloc expr ]
+
+	creaVar-> tipo id
+	asigVar-> creaVar eql [num char cadena arrx matrx bool structBloc elemntArre getElemntMatrx]
+
+	var-> asigGlobalVar | asigVar
+
+----------------------------------------------------Operaciones Aritmeticas----------------------------------------------
+	suma-> num mas num | id mas id | func mas func | arrx mas arrx | matrx mas matrx | opUnar mas opUnar
+	resta-> num mens num | id mens id | func mens func | arrx mens arrx | matrx mens matrx | opUnar mens opUnar
+	multipli-> num multi num | id multi id | func multi func | arrx multi arrx | matrx multi matrx | opUnar multi opUnar
+	divisi-> num div num | id div id | func div func | opUnar div opUnar
+	modul-> num mod num | id mod id | func mod func
+	poten-> num pot num 
+	opAritComb-> [num | id | func | opUnar] [mas mens multi div mod pot] [num | id | func | opUnar]
+	opAritConcat-> opAritComb ([mas mens multi div mod pot] [num | id | func | opUnar])*
+	opArit-> suma | resta | multipli | divisi | modul | poten | opAritComb | opAritConcat
+
+--------------------------------------------------operaciones relacionales------------------------------------------
+	isEqual-> num isEqu num | id isEqu id | cadena isEqu cadena | bool isEqu bool | arrx isEqu arrx | matrx isEqu matrx
+	isDiffe-> num dife num | id dife id | cadena dife cadena | bool dife bool | arrx isEqu arrx | matrx isEqu matrx
+	mayrQue-> num mayrQue num | arrx mayrQue arrx | matrx mayrQue matrx
+	menrQue-> num menrQue num | arrx menrQue arrx | matrx menrQue matrx
+	mayrEquQue-> num mayrEquQue num | arrx mayrEquQue arrx | matrx mayrEquQue matrx
+	menrEquQue-> num menrEquQue num | arrx menrEquQue arrx | matrx mayrEquQue matrx
+	opRelComb-> [num id cadena arrx matrx ] [isEquu dife mayrQue menrQue mayrEquQue menrEquQue] [num id cadena arrx matrx ]
+	opRelConcat-> opRelComb ([isEquu dife mayrQue menrQue mayrEquQue menrEquQue] [num id cadena arrx matrx ])*
+	opRela-> isEqual | isDiffe | mayrQue | menrQue | mayrEquQue | menrEquQue | opRelComb | opRelConcat
+
+--------------------------------------------------------operaciones logicas----------------------------------------------
+	conjun-> bool and bool ((and bool)*)? | id and id
+	disyun-> bool or bool ((or bool)*)? | id or id
+	nega-> neg bool | neg id
+	opLogComb-> [bool id ] [and or neg] [bool id]
+	opLogConcat-> opLogComb ([and or neg] [bool id])*
+	opLogi-> conjun | disyun | nega | opLogComb | opLogConcat
+
+--------------------------------------------------------------operaciones unarias-------------------------------------------
+	sumUnar-> sumUn num
+	restUnar-> resUn num
+	opUnar-> sumUnar | restUnar
+-------------------------------------------------------------operaciones de todo tipo-----------------------------------------------
+	opera-> opArit | opRela | opLogi | opUnar
+
+----------------------------------------------------------------parametros------------------------------------------------
+	param-> bool | func | id | num | char | cadena | arrx | matrx | opera
+	params-> param ((comma param)*)?
 	
-	doWhile -> "do" bloc "while" \( comparacion \) endExpr
+-------------------------------------------------------------if---------------------------------------------------
+	ifStruc-> if parentIz params parentDe Bloc elifStruc?
+	elifStruc-> elif parentIz params parentDe Bloc elifStruc?
+	elseStruc-> else iniBloc Bloc endBloc
+	ifBloc-> ifStruc elseStruc?
+
+-------------------------------------------------------------------------funciones----------------------------------------------------------	
+	func-> tipo id
+	func-> tipo id parentIz params? parentDe bloc? 
+
+---------------------------------------------------------------for----------------------------------------------
+	forBloc-> for parentIz tipo id equ [char num] ? expr ? opArit params parentDe bloc	
+
+----------------------------------------------------------------switch----------------------------------------
+	switchBloc-> switch parentIz [id num] parentDe iniBloc caseBloc+ defaultBloc endBloc
+	caseBloc-> case (numEnt | char) dosDot expr break
+	default-> expr
+
+-------------------------------------------------------------------Structs-------------------------------------------------------------------
+	tipoStruct-> id
+	creaStruct-> Struct tipoStruct id initBloc attributeBloc+ endBloc endExpr
+	asigStruct-> Struct tipoStruct id eql initBloc [char numFlo numEnt]+ endBloc
+	attributeBloc-> (numEnt | numFlo | char) id endExpr
+	attributeBloc-> (numEnt | numFlo | char) id eql (numEnt | numFlo | char) endExpr
+	structBloc-> creaStruct | asigStruct
+	
+	StructAttrVal-> tipoStruct dot [numEnt | numFlo | char] 
+	getStructAttrVal-> StructAttrVal eql [num char] 
+
+------------------------------------------------------------------Arreglos y Matrices -------------------------------------------------------
+	
+	creaArrx-> numEnt id pipe numEnt pipe
+	asigArrx-> creaArrx eql pipe numEnt (comma numEnt)* pipe
+	getElemntArrx-> id pipe numEnt pipe
+	asigElemntArrx-> id pipe numEnt pipe eql numEnt
+	arrx-> creaArrx | asigArrx
+
+	creaMatrx-> numEnt id pipe numEnt pipe pipe numEnt pipe
+	asigMatrx-> creaMatrx eql pipe (pipe numEnt (comma numEnt)* pipe)+ pipe
+	getElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe 
+	asigElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe eql numEnt
+	matrx-> creaMatrx | asigMatrx
+
+--------------------------------------------------------------------do while---------------------------------------------------------
+	doWhile -> "do" bloc "while" parentIz params parentDe
 	break -> "break" endExpr
-	for -> "for" \( tipo id \= num \; comparacion \; id ++ \) bloc

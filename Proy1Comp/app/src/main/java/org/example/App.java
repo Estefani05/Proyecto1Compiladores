@@ -3,12 +3,38 @@
  */
 package org.example;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import static java.lang.System.out;
+import java_cup.parser;
+import java_cup.runtime.ComplexSymbolFactory;
+import java_cup.runtime.SymbolFactory;
+import java_cup.runtime.Symbol;
+import java_cup.internal_error;
+import jflex.exceptions.SilentExit;
+import static jflex.logging.Out.println;
+import jflex.logging.Out;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+ 
+import jflex.Main;
+
 
 public class App {
 
-    public static void GenerarLexerParser()throws Exception{
+    public static void GenerarLexerParser()throws SilentExit, Exception{
         String basePath, fullPathLexer, fullPathparser, jlexer, jparser, jlexerCarpeta;
         MainFlexCup mfjc;
         
