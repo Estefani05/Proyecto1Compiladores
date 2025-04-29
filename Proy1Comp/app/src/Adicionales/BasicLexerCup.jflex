@@ -8,7 +8,6 @@ import java.util.Map;
 import org.example.ErrorHandler;
 
 %%
-
 %public
 %class BasicLexerCup
 %cup
@@ -125,13 +124,20 @@ import org.example.ErrorHandler;
         this.errorHandler = handler;
     }
 
-    private Symbol handleError() {
-        // Imprime el error en consola
-        System.err.println("Error léxico: Caracter ilegal '" + yytext() + "' en la posición " + (yyline + 1) + ", columna " + (yycolumn + 1));
-        
-        // Salta el carácter ilegal
-        yybegin(YYINITIAL);  // Reinicia el análisis para seguir buscando tokens.
-        return new Symbol(sym.error, yyline, yycolumn, yytext()); // Devuelve un token especial de error.
+    // Método handleError CORREGIDO
+    private Symbol handleLexicalError() {
+        String mensaje = "Carácter ilegal '" + yytext() + "'";
+        int linea = yyline + 1;
+        int columna = yycolumn + 1;
+
+        if (errorHandler != null) {
+            errorHandler.reportError(linea, columna, mensaje, "LÉXICO");
+        } else {
+            System.err.println("Error léxico: " + mensaje + " en la línea " + linea + ", columna " + columna);
+        }
+
+        yybegin(YYINITIAL);  // Reinicia análisis
+        return new Symbol(sym.error, yyline, yycolumn, yytext());
     }
 %}
 
@@ -200,6 +206,5 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
 }
 
 [^] { 
-    // Aquí reportamos el error
-    return handleError(); 
-}
+    return handleLexicalError(); 
+} 
