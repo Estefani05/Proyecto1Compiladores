@@ -1,0 +1,8 @@
+
+// Ejemplo de código
+int main() {
+    int x = 10;
+    return x;
+}
+ int string 502 /* Hola */
+ + ? hola mundo char
