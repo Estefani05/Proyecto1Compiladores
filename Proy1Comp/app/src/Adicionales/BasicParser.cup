@@ -1,8 +1,8 @@
-package ParserLexer;
-import java_cup.runtime .*;
+package org.example.ParserLexer;
+import java_cup.runtime.*;
 
-//utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios de lo tomado de la página de cup
-//cambios en parser code, init with y scan with {:
+// Utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios tomados de la página de CUP
+// Cambios en parser code, init with y scan with {: ...
 
 action code {:
     /*CODIGO DE JAVA
@@ -10,33 +10,35 @@ action code {:
     http://www2.cs.tum.edu/projects/cup/examples.php*/
 
     public void hola(){
-        System.out.println("Hola");
+        System.out.println("Inicio Cup");
     }
 
     public void adios(){
-        System.out.println("Adiós");
+        System.out.println("Fin Cup");
     }
 :}
 
 parser code {:
-    // Connect this parser to a scanner!
+    // Conectar este parser con un scanner
     BasicLexerCup lex;
 
     @SuppressWarnings("deprecation")
     public parser(BasicLexerCup lex){
-        this.lex=lex;
+        this.lex = lex;
         this.symbolFactory = new DefaultSymbolFactory();
     }
+
 :}
 
 init with {: :};
 
-/* define how to connect to the scanner! */
+/* Conectar con el scanner */
 scan with {: return lex.next_token(); :};
 
 /* Terminales (tokens retornados por el scanner). */
-terminal INTEGER_T, CHAR_T, COMPARACION, ASIGNA, SUMA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL; /* Generales */
+terminal INTEGER_T, CHAR_T, STRING_T, COMPARACION, ASIGNA, SUMA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL; /* Generales */
 terminal INTEGER, FLOAT, BOOL, CHAR, STRING; /* Tipos */
+terminal ERROR;
 terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS; /* Estructura */
 terminal BLOQUE_A, BLOQUE_C; /* Estructura */
 terminal MAIN; /* Estructura */
@@ -50,16 +52,18 @@ terminal CONJUNCION, DISYUNCION, NEGACION; /* Operadores logicos */
 terminal IF, ELSE, WHILE, FOR, SWITCH, CASE, DEFAULT, BREAK, RETURN, DOS_PUNTOS;
 terminal PRINT, READ; /* Operaciones de lectura */
 
-/* No terminales */
-non terminal programa, programaAux;
+// no terminales
+non terminal programa, lineas, linea, tipos, literal;
 
-/* Producción de inicio */
+//produccion de inicio
 start with programa;
 
-/* Reglas de producción */
-programa ::= 
-    MAIN PARENTESIS_A PARENTESIS_C BLOQUE_A programaAux BLOQUE_C
-    ;
+programa ::= {: hola();:} lineas {: adios();:} ;
+tipos ::= INTEGER_T | STRING_T | CHAR_T ;
+literal ::= INTEGER_LITERAL | STRING_LITERAL;
+lineas ::= linea;
+lineas ::= lineas linea ;
+linea ::= tipos IDENTIFIER ASIGNA literal FINLINEA;
 
 programaAux ::= 
     /* Puedes definir aquí las reglas para el cuerpo del programa */
