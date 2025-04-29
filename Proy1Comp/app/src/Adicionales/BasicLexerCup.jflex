@@ -157,14 +157,16 @@ LineTerminator = \r|\n|\r\n
 InputCharacter = [^\r\n]
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
-Comment = {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
+Comment = "@" {TraditionalComment} | {EndOfLineComment} | {DocumentationComment}
 TraditionalComment   = "/*" [^*] ~"*/" | "/*" "*"+ "/"
-EndOfLineComment     = "//" {InputCharacter}* {LineTerminator}?
-DocumentationComment = "/**" {CommentContent} "*"+ "/"
+EndOfLineComment     = "@" "//" {InputCharacter}* {LineTerminator}?
+DocumentationComment = "{" {CommentContent} "*"+ "}"
 CommentContent       = ( [^*] | \*+ [^/*] )*
 
-Identifier = [:jletter:] [:jletterdigit:]*
+Identifier = [a-zA-Z]([a-zA-Z0-9])*
 DecIntegerLiteral = 0 | [1-9][0-9]*
+int=[0-9]+
+numFlo=[0-9]+ "."? [0-9]+
 
 %state STRING
 
@@ -178,7 +180,49 @@ DecIntegerLiteral = 0 | [1-9][0-9]*
   "=="        { return symbol(sym.COMPARACION); }
   "="         { return symbol(sym.ASIGNA); }
   "+"         { return symbol(sym.SUMA); }
+  "-"         { return symbol(sym.RESTA); }
+  "*"         { return symbol(sym.MULTI); }
+  "//"         { return symbol(sym.DIV); }
+  "~"         { return symbol(sym.MOD); }
+  "**"         { return symbol(sym.POTE); }
+  ">"         { return symbol(sym.MAYQUE); }
+  "<"         { return symbol(sym.MENQUE); }
+  ">="         { return symbol(sym.MAYEQUQUE); }
+  "<="         { return symbol(sym.MENEQUQUE); }
+  "!="         { return symbol(sym.DIFE); }
+  "++"         { return symbol(sym.SUMUN); }
+  "--"         { return symbol(sym.RESUN); }
   "?"         { return symbol(sym.FINLINEA); }
+  "."         { return symbol(sym.DOT); }
+  ":"         { return symbol(sym.DOSDOT); }
+  ","         { return symbol(sym.COMMA); }
+  "ʃ"         { return symbol(sym.PARENTIZ); }
+  "ʅ"         { return symbol(sym.PARENTDE); }
+  "|"         { return symbol(sym.PIPE); }
+  "\\"         { return symbol(sym.INITBLOC); }
+  "/"         { return symbol(sym.ENDBLOC); }
+  "if"         { return symbol(sym.IF); }
+  "elif"         { return symbol(sym.ELIF); }
+  "else"         { return symbol(sym.ELSE); }
+  "do"         { return symbol(sym.DO); }
+  "while"         { return symbol(sym.WHILE); }
+  "break"         { return symbol(sym.BREAK); }
+  "for"         { return symbol(sym.FOR); }
+  "return"         { return symbol(sym.RETURN); }
+  "leer"         { return symbol(sym.LEER); }
+  "impr"         { return symbol(sym.IMPR); }
+  "arrx"         { return symbol(sym.ARRX); }
+  "matrx"         { return symbol(sym.MATRX); }
+  "func"         { return symbol(sym.FUNC); }
+  "void"         { return symbol(sym.VOID); }
+  "param"         { return symbol(sym.PARAM); }
+  "global"         { return symbol(sym.GLOBAL); }
+  "struct"         { return symbol(sym.STRUCT); }
+  "\\"         { return symbol(sym.STBLOC); }
+  "/"         { return symbol(sym.ENDBLOC); }
+  "{"         { return symbol(sym.STBCOMMENT); }
+  "}"         { return symbol(sym.ENDBCOMMENT); }
+  
 
   /* identifiers */ 
   {Identifier} { return symbol(sym.IDENTIFIER, yytext()); }

@@ -7,9 +7,9 @@ Terminales-----------------------
 	mod-> '~'
 	pote-> '**'
 
-	eql-> '='
+	ASIGNA-> '='
 
-	isEqu-> '=='
+	comparacion-> '=='
 	mayQue-> '>'
 	menQue-> '<'
 	mayEquQue-> '>='
@@ -62,7 +62,7 @@ Terminales-----------------------
 
 	struct-> struct
 
-	numEnt-> [0-9]+
+	int-> [0-9]+
 	numFlo-> [1-9].?[0-9]*
 	char-> [a-zA-Z_]
 
@@ -112,7 +112,7 @@ No Terminales------------------------
 	blocComment -> \{ cadena \}
 	comment-> lineComment | blocComment
 
-	num-> numEnt | numFlo
+	num-> int | numFlo
 
 	id-> [num cadena]*
 
@@ -121,18 +121,18 @@ No Terminales------------------------
 	read -> "leer" parentIz cadena parentDe
 	print -> "impr" parentIz cadena parentDe
 
-----------------------------------------------------------------numeros--------------------------------------------
-	ent-> numEnt
+----------------------------------------------------------------numeros y tipos--------------------------------------------
+	ent-> int
 	flota-> numFlo
 	tipo-> void | ent | flota | char | cadena | arrx | matrx | structBloc
 
 
 --------------------------------------------------------------variables y tipos---------------------------------------- 
 	creaGlobalVar-> global tipo id 
-	asigGlobalVar-> crearGlobalVar eql [num char cadena arrx matrx bool structBloc expr ]
+	asigGlobalVar-> crearGlobalVar ASIGNA [num char cadena arrx matrx bool structBloc expr ]
 
 	creaVar-> tipo id
-	asigVar-> creaVar eql [num char cadena arrx matrx bool structBloc elemntArre getElemntMatrx]
+	asigVar-> creaVar ASIGNA [num char cadena arrx matrx bool structBloc elemntArre getElemntMatrx]
 
 	var-> asigGlobalVar | asigVar | creaVar | creaGlobalVar
 
@@ -148,8 +148,8 @@ No Terminales------------------------
 	opArit-> suma | resta | multipli | divisi | modul | poten | opAritComb | opAritConcat
 
 --------------------------------------------------operaciones relacionales------------------------------------------
-	isEqual-> num isEqu num | id isEqu id | cadena isEqu cadena | bool isEqu bool | arrx isEqu arrx | matrx isEqu matrx
-	isDiffe-> num dife num | id dife id | cadena dife cadena | bool dife bool | arrx isEqu arrx | matrx isEqu matrx
+	isEqual-> num comparacion num | id comparacion id | cadena comparacion cadena | bool comparacion bool | arrx comparacion arrx | matrx comparacion matrx
+	isDiffe-> num dife num | id dife id | cadena dife cadena | bool dife bool | arrx comparacion arrx | matrx comparacion matrx
 	mayrQue-> num mayrQue num | arrx mayrQue arrx | matrx mayrQue matrx
 	menrQue-> num menrQue num | arrx menrQue arrx | matrx menrQue matrx
 	mayrEquQue-> num mayrEquQue num | arrx mayrEquQue arrx | matrx mayrEquQue matrx
@@ -192,32 +192,32 @@ No Terminales------------------------
 
 ----------------------------------------------------------------switch----------------------------------------
 	switchBloc-> switch parentIz [id num] parentDe iniBloc caseBloc+ defaultBloc endBloc
-	caseBloc-> case (numEnt | char) dosDot expr break
+	caseBloc-> case (int | char) dosDot expr break
 	default-> expr
 
 -------------------------------------------------------------------Structs-------------------------------------------------------------------
 	tipoStruct-> id
 	creaStruct-> Struct tipoStruct id initBloc attributeBloc+ endBloc endExpr
-	asigStruct-> Struct tipoStruct id eql initBloc [char numFlo numEnt]+ endBloc
-	attributeBloc-> (numEnt | numFlo | char) id endExpr
-	attributeBloc-> (numEnt | numFlo | char) id eql (numEnt | numFlo | char) endExpr
+	asigStruct-> Struct tipoStruct id ASIGNA initBloc [char numFlo int]+ endBloc
+	attributeBloc-> (int | numFlo | char) id endExpr
+	attributeBloc-> (int | numFlo | char) id ASIGNA (int | numFlo | char) endExpr
 	structBloc-> creaStruct | asigStruct | attributeBloc | StructAttrVal | getStructAttrVal
 	
-	StructAttrVal-> tipoStruct dot [numEnt | numFlo | char] 
-	getStructAttrVal-> StructAttrVal eql [num char] 
+	StructAttrVal-> tipoStruct dot [int | numFlo | char] 
+	getStructAttrVal-> StructAttrVal ASIGNA [num char] 
 
 ------------------------------------------------------------------Arreglos y Matrices -------------------------------------------------------
 	
-	creaArrx-> numEnt id pipe numEnt pipe
-	asigArrx-> creaArrx eql pipe numEnt (comma numEnt)* pipe
-	getElemntArrx-> id pipe numEnt pipe
-	asigElemntArrx-> id pipe numEnt pipe eql numEnt
+	creaArrx-> int id pipe int pipe
+	asigArrx-> creaArrx ASIGNA pipe int (comma int)* pipe
+	getElemntArrx-> id pipe int pipe
+	asigElemntArrx-> id pipe int pipe ASIGNA int
 	arrx-> creaArrx | asigArrx | getElemntArrx | asigElemntArrx
 
-	creaMatrx-> numEnt id pipe numEnt pipe pipe numEnt pipe
-	asigMatrx-> creaMatrx eql pipe (pipe numEnt (comma numEnt)* pipe)+ pipe
-	getElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe 
-	asigElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe eql numEnt
+	creaMatrx-> int id pipe int pipe pipe int pipe
+	asigMatrx-> creaMatrx ASIGNA pipe (pipe int (comma int)* pipe)+ pipe
+	getElemntMatrx-> id pipe int pipe pipe int pipe 
+	asigElemntMatrx-> id pipe int pipe pipe int pipe ASIGNA int
 	matrx-> creaMatrx | asigMatrx | getElemntMatrx | asigElemntMatrx
 
 --------------------------------------------------------------------do while---------------------------------------------------------
