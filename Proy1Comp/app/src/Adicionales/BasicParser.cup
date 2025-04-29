@@ -61,7 +61,7 @@ start with programa;
 programa ::= {: hola();:} lineas {: adios();:} ;
 tipos ::= INTEGER_T | STRING_T | CHAR_T ;
 literal ::= INTEGER_LITERAL | STRING_LITERAL;
-lineas ::= linea;
+lineas ::= linea ;
 lineas ::= lineas linea ;
 linea ::= tipos IDENTIFIER ASIGNA literal FINLINEA;
 
