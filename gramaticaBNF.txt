@@ -134,7 +134,7 @@ No Terminales------------------------
 	creaVar-> tipo id
 	asigVar-> creaVar eql [num char cadena arrx matrx bool structBloc elemntArre getElemntMatrx]
 
-	var-> asigGlobalVar | asigVar
+	var-> asigGlobalVar | asigVar | creaVar | creaGlobalVar
 
 ----------------------------------------------------Operaciones Aritmeticas----------------------------------------------
 	suma-> num mas num | id mas id | func mas func | arrx mas arrx | matrx mas matrx | opUnar mas opUnar
@@ -201,7 +201,7 @@ No Terminales------------------------
 	asigStruct-> Struct tipoStruct id eql initBloc [char numFlo numEnt]+ endBloc
 	attributeBloc-> (numEnt | numFlo | char) id endExpr
 	attributeBloc-> (numEnt | numFlo | char) id eql (numEnt | numFlo | char) endExpr
-	structBloc-> creaStruct | asigStruct
+	structBloc-> creaStruct | asigStruct | attributeBloc | StructAttrVal | getStructAttrVal
 	
 	StructAttrVal-> tipoStruct dot [numEnt | numFlo | char] 
 	getStructAttrVal-> StructAttrVal eql [num char] 
@@ -212,13 +212,13 @@ No Terminales------------------------
 	asigArrx-> creaArrx eql pipe numEnt (comma numEnt)* pipe
 	getElemntArrx-> id pipe numEnt pipe
 	asigElemntArrx-> id pipe numEnt pipe eql numEnt
-	arrx-> creaArrx | asigArrx
+	arrx-> creaArrx | asigArrx | getElemntArrx | asigElemntArrx
 
 	creaMatrx-> numEnt id pipe numEnt pipe pipe numEnt pipe
 	asigMatrx-> creaMatrx eql pipe (pipe numEnt (comma numEnt)* pipe)+ pipe
 	getElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe 
 	asigElemntMatrx-> id pipe numEnt pipe pipe numEnt pipe eql numEnt
-	matrx-> creaMatrx | asigMatrx
+	matrx-> creaMatrx | asigMatrx | getElemntMatrx | asigElemntMatrx
 
 --------------------------------------------------------------------do while---------------------------------------------------------
 	doWhile -> "do" bloc "while" parentIz params parentDe
