@@ -117,6 +117,10 @@ public class App {
         return "Hello World!";
     }
 
+    // Método principal que ejecuta el análisis léxico y sintáctico
+    // Entrada: argumentos de línea de comandos (no utilizados)
+    // Salida: análisis realizado, archivos generados, errores reportados si ocurren
+    // Restricción: los archivos requeridos deben existir y tener permisos adecuados
     public static void main(String[] args) {
         try {
             GenerarLexerParser();
