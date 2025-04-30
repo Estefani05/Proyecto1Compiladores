@@ -7,6 +7,9 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+// Constructor del manejador de errores
+// Entrada: ruta del archivo de log de errores
+// Salida: archivo de log inicializado y listo para registrar errores
 public class ErrorHandler {
     private final String errorLogPath;
     private final List<String> errors = new ArrayList<>();
@@ -17,7 +20,10 @@ public class ErrorHandler {
         this.errorLogPath = logPath;
         initializeLogFile();
     }
-    
+
+    // Método para inicializar el archivo de log de errores
+    // Entrada: ninguna (usa la ruta definida en errorLogPath)
+    // Salida: archivo de errores creado o reiniciado con encabezado
     private void initializeLogFile() {
         try {
             // Crear directorios si no existen
