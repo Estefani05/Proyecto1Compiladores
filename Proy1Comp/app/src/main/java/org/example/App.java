@@ -14,7 +14,6 @@ import java_cup.runtime.*;
  * Salida: Archivos generados, tokens y log de errores.
  * Restricción: Las rutas y permisos deben ser válidos.
  */
-
 public class App {
     // Rutas constantes
     private static final String INPUT_FILE = "app/src/main/resources/ejemplo1.txt";
@@ -57,13 +56,12 @@ public class App {
 
     }
 
-    /**
+     /**
      * Analiza el archivo fuente dado.
      * Entrada: Ruta del archivo fuente.
      * Salida: Archivo de tokens generado.
      * Restricción: El archivo fuente debe existir.
      */
-
     private static void analizarCodigoFuente(String inputFile, String tokensFile) throws Exception {
         // Limpiar archivo de tokens previo si existe
         Files.deleteIfExists(Paths.get(tokensFile));
