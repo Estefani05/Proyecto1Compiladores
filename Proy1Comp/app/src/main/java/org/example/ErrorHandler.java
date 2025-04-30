@@ -27,6 +27,13 @@ public class ErrorHandler {
             Files.deleteIfExists(Paths.get(errorLogPath));
             Files.createFile(Paths.get(errorLogPath));
             
+            // Escribir encabezado en el archivo
+            try (FileWriter fw = new FileWriter(errorLogPath)) {
+                fw.write("=== REGISTRO DE ERRORES ===\n");
+                fw.write(String.format("%-10s %-5s %-5s %s\n", "TIPO", "LÍNEA", "COL", "MENSAJE"));
+                fw.write("-----------------------------------------------------\n");
+            }
+            
             System.out.println("Archivo de errores inicializado en: " + 
                 Paths.get(errorLogPath).toAbsolutePath());
         } catch (IOException e) {
@@ -36,18 +43,26 @@ public class ErrorHandler {
     }
     
     public void reportError(int line, int column, String message, String errorType) {
+        // Normalizar valores
+        line = Math.max(line, 0);  // Evitar línea negativa
+        column = Math.max(column, 0);  // Evitar columna negativa
+        
         String errorMsg = String.format("[%s] Línea %d, Columna %d: %s", 
                               errorType, line, column, message);
         errors.add(errorMsg);
         
+        // Formato para archivo de log
+        String logMsg = String.format("%-10s %-5d %-5d %s", 
+                           errorType, line, column, message);
+        
         // Escribir en archivo con verificación explícita
         try {
             FileWriter fw = new FileWriter(errorLogPath, true);
-            fw.write(errorMsg + "\n");
+            fw.write(logMsg + "\n");
             fw.flush(); // Forzar escritura inmediata
             fw.close();
             
-            System.out.println("Error registrado en archivo: " + errorMsg);
+            System.out.println("Error registrado: " + errorMsg);
         } catch (IOException e) {
             System.err.println("Error crítico escribiendo en log:");
             System.err.println("Ruta intentada: " + Paths.get(errorLogPath).toAbsolutePath());
@@ -68,6 +83,7 @@ public class ErrorHandler {
 
     public void enterPanicMode() {
         this.panicMode = true;
+        System.err.println("¡ENTRANDO EN MODO PÁNICO! Errores graves detectados.");
     }
 
     public void exitPanicMode() {
@@ -79,10 +95,29 @@ public class ErrorHandler {
     }
 
     public String getErrorSummary() {
+        if (errors.isEmpty()) {
+            return "\n=== NO SE DETECTARON ERRORES ===\n";
+        }
+        
         StringBuilder sb = new StringBuilder();
         sb.append("\n=== RESUMEN DE ERRORES ===\n");
         sb.append("Total errores: ").append(errors.size()).append("\n");
-        errors.forEach(e -> sb.append(e).append("\n"));
+        
+        // Contar errores por tipo
+        int lexicoCount = 0;
+        int sintacticoCount = 0;
+        int semanticoCount = 0;
+        
+        for (String error : errors) {
+            if (error.contains("[LÉXICO]")) lexicoCount++;
+            if (error.contains("[SINTÁCTICO]")) sintacticoCount++;
+            if (error.contains("[SEMÁNTICO]")) semanticoCount++;
+        }
+        
+        sb.append("- Errores léxicos: ").append(lexicoCount).append("\n");
+        sb.append("- Errores sintácticos: ").append(sintacticoCount).append("\n");
+        sb.append("- Errores semánticos: ").append(semanticoCount).append("\n");
+        
         return sb.toString();
     }
 
@@ -92,5 +127,13 @@ public class ErrorHandler {
 
     public boolean shouldContinue() {
         return continueOnError;
+    }
+    
+    public int getErrorCount() {
+        return errors.size();
+    }
+    
+    public List<String> getErrors() {
+        return new ArrayList<>(errors);  
     }
 }
