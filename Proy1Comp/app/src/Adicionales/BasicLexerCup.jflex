@@ -166,7 +166,7 @@ CommentContent       = ( [^*] | \*+ [^/*] )*
 Identifier = [a-zA-Z]([a-zA-Z0-9])*
 DecIntegerLiteral = 0 | [1-9][0-9]*
 int=[0-9]+
-numFlo=[0-9]+ "."? [0-9]+
+float=[0-9]+ "."? [0-9]+
 
 %state STRING
 
@@ -175,10 +175,11 @@ numFlo=[0-9]+ "."? [0-9]+
 <YYINITIAL> {
   /* keywords */
   "int"       { return symbol(sym.INTEGER_T); }
+  "float"       { return symbol(sym.FLOAT); }
   "char"      { return symbol(sym.CHAR_T); }
   "string"    { return symbol(sym.STRING_T); }
   "=="        { return symbol(sym.COMPARACION); }
-  "="         { return symbol(sym.ASIGNA); }
+  "="         { return symbol(sym.ASIGNACION); }
   "+"         { return symbol(sym.SUMA); }
   "-"         { return symbol(sym.RESTA); }
   "*"         { return symbol(sym.MULTI); }
@@ -221,8 +222,12 @@ numFlo=[0-9]+ "."? [0-9]+
   "\\"         { return symbol(sym.STBLOC); }
   "/"         { return symbol(sym.ENDBLOC); }
   "{"         { return symbol(sym.STBCOMMENT); }
-  "}"         { return symbol(sym.ENDBCOMMENT); }
-  
+  "}"         { return symbol(sym.ENDBCOMMENT); } 
+  "!"         { return symbol(sym.NEGACION); } 
+  "^"         { return symbol(sym.CONJUNCION); } 
+  "#"         { return symbol(sym.DISJUNCION); } 
+  "@"         { return symbol(sym.ARROBA); } 
+
 
   /* identifiers */ 
   {Identifier} { return symbol(sym.IDENTIFIER, yytext()); }

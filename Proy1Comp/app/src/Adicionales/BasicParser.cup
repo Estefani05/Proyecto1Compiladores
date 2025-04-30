@@ -1,10 +1,26 @@
 package org.example.ParserLexer;
 import java_cup.runtime.*;
-import org.example.ErrorHandler;
 
-// Utiliza class BasicLexerCupV que genera el lexer.jflex
+import java.util.HashMap; // import the HashMap class
+import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+// Utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios tomados de la página de CUP
+// Cambios en parser code, init with y scan with {: ...
+
 action code {:
-    /* CÓDIGO DE JAVA */
+    /*CODIGO DE JAVA
+    https://www.jflex.de/
+    http://www2.cs.tum.edu/projects/cup/examples.php*/
+
     public void hola(){
         System.out.println("Inicio Cup");
     }
@@ -17,194 +33,176 @@ action code {:
 parser code {:
     // Conectar este parser con un scanner
     BasicLexerCup lex;
-    
-    // Variables para manejo de errores
-    public int errorCount = 0;
-    private ErrorHandler errorHandler;
-    
-    // Método para establecer el ErrorHandler
-    public void setErrorHandler(ErrorHandler handler) {
-        this.errorHandler = handler;
-    }
-    
-    // Método para reportar errores
-    public void report_error(String message, Object info) {
-        StringBuilder errorMessage = new StringBuilder();
-        int line = 0;
-        int column = 0;
-        
-        if (info instanceof java_cup.runtime.Symbol) {
-            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
-            if (s.left >= 0) {
-                line = s.left + 1;
-                if (s.right >= 0) {
-                    column = s.right + 1;
-                }
-            }
-        }
-        
-        // Usar el ErrorHandler si está disponible
-        if (errorHandler != null) {
-            errorHandler.reportError(line, column, message, "SINTÁCTICO");
-        } else {
-            // Fallback al comportamiento original
-            errorMessage.append("Error sintáctico: ");
-            if (line > 0) {
-                errorMessage.append("línea " + line);
-                if (column > 0) {
-                    errorMessage.append(", columna " + column);
-                }
-            }
-            errorMessage.append(": " + message);
-            System.err.println(errorMessage.toString());
-        }
-        
-        errorCount++;
-    }
-    
-    // Método para recuperación de errores
-    public void syntax_error(Symbol cur_token) {
-        String tokenName = symbl_name_from_id(cur_token.sym);
-        String tokenValue = (cur_token.value != null) ? cur_token.value.toString() : "?";
-        
-        report_error("Error cerca de " + tokenName + " '" + tokenValue + "'", cur_token);
-        
-        // Si hay un ErrorHandler y está en pánico, detener el análisis
-        if (errorHandler != null && errorHandler.isInPanicMode() && !errorHandler.shouldContinue()) {
-            throw new RuntimeException("Análisis sintáctico abortado en modo pánico");
-        }
-    }
-    
-    // Método para errores irrecuperables
-    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
-        // Entrar en modo pánico si hay un ErrorHandler
-        if (errorHandler != null) {
-            errorHandler.enterPanicMode();
-            report_error("Error sintáctico fatal. Compilación abortada", cur_token);
-        } else {
-            report_error("Error sintáctico fatal. Compilación abortada", cur_token);
-        }
-        
-        throw new java.lang.Exception("Error sintáctico irrecuperable");
-    }
-    
-    // IMPORTANTE: Debe ser público
-    public String symbl_name_from_id(int id) {
-        return (id >= 0 && id < sym.terminalNames.length) ? 
-               sym.terminalNames[id] : "UNKNOWN_TOKEN";
-    }
 
     @SuppressWarnings("deprecation")
     public parser(BasicLexerCup lex){
         this.lex = lex;
         this.symbolFactory = new DefaultSymbolFactory();
-        
-        // Si el lexer tiene un ErrorHandler, lo usamos
-        if (lex != null) {
-            try {
-                // Usamos reflection para obtener el errorHandler del lexer
-                java.lang.reflect.Field f = lex.getClass().getDeclaredField("errorHandler");
-                f.setAccessible(true);
-                Object handler = f.get(lex);
-                if (handler instanceof ErrorHandler) {
-                    this.errorHandler = (ErrorHandler) handler;
-                    System.out.println("ErrorHandler conectado desde lexer a parser");
-                }
-            } catch (Exception e) {
-                System.err.println("No se pudo obtener ErrorHandler del lexer: " + e.getMessage());
-            }
-        }
     }
+
 :}
 
 init with {: :};
 
+/* Conectar con el scanner */
 scan with {: return lex.next_token(); :};
 
-/* Terminales (tokens) */
-terminal INTEGER_T, CHAR_T, STRING_T, ASIGNA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL;
-terminal INT, RETURN, MAIN;
-terminal PARENTESIS_A, PARENTESIS_C, BLOQUE_A, BLOQUE_C;
-terminal SUMA, RESTA, MULTIPLICACION, DIVISION;
-terminal IGUAL, MAYOR, MENOR;
+/* Terminales (tokens retornados por el scanner). */
+terminal INTEGER_T, CHAR_T, STRING_T, POTE, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL, ARROBA; /* Generales */
+terminal INTEGER, FLOAT, BOOL, CHAR, STRING, STRUCT, ARRX, MATRX, VOID, GLOBAL; /* Tipos */
 terminal ERROR;
+terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS; /* Estructura */
+terminal BLOQUE_A, BLOQUE_C; /* Estructura */
+terminal MAIN; /* Estructura */
+terminal PIPE, INITBLOC, ENDBLOC; /* Simbolos */
+terminal PARENTIZ, PARENTDE, STBLOC, ENDBLOC, STBCOMMENT, ENDBCOMMENT, COMMENT; /* Simbolos */
+terminal ASIGNACION; /* Simbolos */
+terminal DOT, DOSDOT, COMMA; /* Simbolos */
+terminal SUMA, RESTA, DIV, MULTI, MOD, POTE, SUMUN, RESUN; /* Operadores aritméticos*/
+terminal MENQUE, MAYQUE, MAYEQUQUE, MENEQUQUE, COMPARACION, ASIGNA, DIFE; /* Operadores relacionales */
+terminal CONJUNCION, DISYUNCION, NEGACION; /* Operadores logicos */
+terminal IF, ELIF, ELSE, DO, WHILE, DOWHILE, BREAK, FOR, SWITCH, CASE, DEFAULT, RETURN, FUNC; /* Estructuras de control */
+terminal IMPR, LEER; /* Operaciones de lectura */
 
-/* Terminales no usados pero declarados para completitud */
-terminal FLOAT, BOOL, CHAR, STRING, COMPARACION;
-terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS;
-terminal CORCHETE_A, CORCHETE_C, ASIGNACION, DELIMITADOR;
-terminal MODULO, POTENCIA, INCREMENTO, DECREMENTO;
-terminal MENOR_IGUAL, MAYOR_IGUAL, IGUALDAD, DIFERENTE;
-terminal CONJUNCION, DISYUNCION, NEGACION;
-terminal IF, ELSE, WHILE, FOR, SWITCH, CASE, DEFAULT, BREAK, DOS_PUNTOS;
-terminal PRINT, READ;
+// no terminales
+non terminal main, expr, opera, bool, ifBloc, doWhile, break, forBloc, return, blocComment, comment, num, char, cadena, bloc, params, var, func, arrx, matrx;
 
-/* No terminales */
-non terminal programa, declaraciones, declaracion, tipo_dato, funcion_main, bloque, sentencias, sentencia;
-non terminal expresion, termino, factor;
+/* precedencias */
+precedence left SUMA, RESTA, MULTI, DIV, MOD; /* Operadores aritméticos */
+precedence left MENQUE, MAYQUE, MAYEQUQUE, MENEQUQUE, COMPARACION, ASIGNA, DIFE; /* Operadores relacionales */
+precedence left CONJUNCION, DISYUNCION, NEGACION; /* Operadores logicos */  
+precedence left PARENTIZ, PARENTDE; /* Simbolos */
+precedence left STBLOC, ENDBLOC, STBCOMMENT, ENDBCOMMENT, COMMENT; /* Simbolos */
 
-/* Precedencias para operadores */
-precedence left SUMA, RESTA;
-precedence left MULTIPLICACION, DIVISION;
-precedence left IGUAL, MAYOR, MENOR;
+//produccion de inicio
+start with main;
 
-/* Producción inicial */
-start with programa;
+//Cuerpo del programa
+MAIN ::= {: hola();:} EXPR {: adios();:} ;
 
-/* Definición de la gramática */
-programa ::= {: hola(); :} declaraciones {: adios(); :}
-          | /* vacío */ {: hola(); adios(); :} ;
+EXPR ::= EXPR EXPR | OPERA | BOOL | IF | DOWHILE | DO | WHILE | BREAK | FOR | FORBLOC | SWITCH | CASE | DEFAULT | RETURN | BLOCCOMMENT | COMMENT| NUM | CHAR | CADENA | STRING | BLOC | PARAMS | VAR| TIPO | FUNC | IMPR | LEER | BREAK | ARRX | MATRX | STBLOC expr ENDBLOC | STBCOMMENT expr ENDBCOMMENT | COMMENT expr ENDBLOC | STBLOC expr ENDBLOC STBLOC expr ENDBLOC;
 
-declaraciones ::= declaracion
-                | declaraciones declaracion;
+//tipos de datos o variables
+TIPO ::= INTEGER_T | STRING_T | CHAR_T | CHAR | FLOAT | BOOL | VOID | GLOBAL | STRUCT | ARRX | MATRX;
 
-declaracion ::= funcion_main
-              | tipo_dato IDENTIFIER ASIGNA expresion FINLINEA
-              | tipo_dato IDENTIFIER FINLINEA
-              | error FINLINEA {:
-                    parser.report_error("Error en la sintaxis de declaración", null);
-                    :} ;
+//bloques
+BLOC::= STBLOC EXPR ENDBLOC | INITBLOC EXPR ENDBLOC;
 
-tipo_dato ::= INTEGER_T
-            | CHAR_T
-            | STRING_T
-            | INT ;
+//booleanos
+BOOL::= LUNA | SOL;
 
-funcion_main ::= INT MAIN PARENTESIS_A PARENTESIS_C bloque 
-               | error PARENTESIS_C bloque {:
-                    parser.report_error("Error en la declaración de la función main", null);
-                    :} ;
+//Strings y cadenas de caracteres
+CADENA::= CHAR | CADENA CHAR;
+STRING::= STRING_T | STRING_LITERAL | CADENA;
 
-bloque ::= BLOQUE_A sentencias BLOQUE_C
-         | BLOQUE_A BLOQUE_C 
-         | error {:
-              parser.report_error("Error en el bloque de código", null);
-              :} BLOQUE_C;
+//Bloques
+COMENTARIO_LINEA::= ARROBA EXPR | ARROBA;
+BLOCCOMMENT::= STBCOMMENT EXPR ENDBCOMMENT;
+COMMENT::= COMENTARIO_LINEA| BLOCCOMMENT
 
-sentencias ::= sentencia
-             | sentencias sentencia;
+//Numeros
+NUM::= INTEGER | INTEGER_LITERAL | FLOAT | INTEGER_T;
 
-sentencia ::= tipo_dato IDENTIFIER ASIGNA expresion FINLINEA
-            | RETURN expresion FINLINEA
-            | error FINLINEA {:
-                parser.report_error("Error en sentencia", null);
-                :}
-            | tipo_dato error FINLINEA {:
-                parser.report_error("Error en declaración de variable", null);
-                :} ;
+//Identificadores
+IDENTIFIER::= IDENTIFIER IDENTIFIER | CADENA;
 
-expresion ::= termino
-            | expresion SUMA termino
-            | expresion RESTA termino
-            | expresion IGUAL termino
-            | expresion MAYOR termino
-            | expresion MENOR termino;
+//Return
+return::= EXPR;
 
-termino ::= factor
-          | termino MULTIPLICACION factor
-          | termino DIVISION factor;
+//entrada y salida
+leer::= LEER PARENTIZ IDENTIFIER PARENTDE;
+impr::= IMPR PARENTIZ IDENTIFIER PARENTDE;;
 
-factor ::= INTEGER_LITERAL
-         | STRING_LITERAL
-         | IDENTIFIER
-         | PARENTESIS_A expresion PARENTESIS_C;
+//Variables
+CREAVARGLOBAL::= GLOBAL TIPO IDENTIFIER;
+ASIGGLOBALVAR::= CREAVARGLOBAL ASIGNACION NUM | CREAVARGLOBAL ASIGNACION IDENTIFIER | CREAVARGLOBAL ASIGNACION STRING_LITERAL | CREAVARGLOBAL ASIGNACION CADENA | CREAVARGLOBAL ASIGNACION BOOL | CREAVARGLOBAL ASIGNACION CHAR | CREAVARGLOBAL ASIGNACION FLOAT | CREAVARGLOBAL ASIGNACION ARRX | CREAVARGLOBAL ASIGNACION MATRX; 
+
+CREAVAR::= TIPO IDENTIFIER;
+ASIGVAR::= CREAVAR ASIGNACION NUM | CREAVAR ASIGNACION IDENTIFIER | CREAVAR ASIGNACION STRING_LITERAL | CREAVAR ASIGNACION CADENA | CREAVAR ASIGNACION BOOL | CREAVAR ASIGNACION CHAR | CREAVAR ASIGNACION FLOAT | CREAVAR ASIGNACION ARRX | CREAVAR ASIGNACION MATRX;
+
+VAR::= ASIGGLOBALVAR | ASIGVAR | CREAVARGLOBAL | CREAVAR;
+
+//Operaciones aritmeticas
+SUMAR::= NUM SUMA NUM | IDENTIFIER SUMA IDENTIFIER | IDENTIFIER SUMA NUM | NUM SUMA IDENTIFIER | NUM SUMA CADENA | CADENA SUMA NUM | CADENA SUMA IDENTIFIER | SUMUNAR SUMA NUM | SUMUNAR SUMA SUMUNAR | NUM SUMA SUMUNAR | RESTUNAR SUMA RESTUNAR | RESTUNAR SUMA NUM | NUM SUMA RESTUNAR | CADENA SUMA CADENA | NUM SUMA ARRX | NUM SUMA MATRX | SUMUNAR SUMA ARRX | SUMUNAR SUMA MATRX;
+RESTAR::= NUM RESTA NUM | IDENTIFIER RESTA IDENTIFIER | IDENTIFIER RESTA NUM | NUM RESTA IDENTIFIER | NUM RESTA CADENA | CADENA RESTA NUM | CADENA RESTA IDENTIFIER | SUMUNAR RESTA NUM | SUMUNAR RESTA SUMUNAR | NUM RESTA SUMUNAR | RESTUNAR RESTA RESTUNAR | RESTUNAR RESTA NUM | NUM RESTA RESTUNAR | CADENA RESTA CADENA | NUM RESTA ARRX | NUM RESTA MATRX | SUMUNAR RESTA ARRX | SUMUNAR RESTA MATRX;
+MULTIPL::= NUM MULTI NUM | IDENTIFIER MULTI IDENTIFIER | IDENTIFIER MULTI NUM | NUM MULTI IDENTIFIER | NUM MULTI CADENA | CADENA MULTI NUM | CADENA MULTI IDENTIFIER | SUMUNAR MULTI NUM | SUMUNAR MULTI SUMUNAR | NUM MULTI SUMUNAR | RESTUNAR MULTI RESTUNAR | RESTUNAR MULTI NUM | NUM MULTI RESTUNAR | CADENA MULTI CADENA | NUM MULTI ARRX | NUM MULTI MATRX | SUMUNAR MULTI ARRX | SUMUNAR MULTI MATRX;
+DIVD::= NUM DIV NUM | IDENTIFIER DIV IDENTIFIER | IDENTIFIER DIV NUM | NUM DIV IDENTIFIER | NUM DIV CADENA | CADENA DIV NUM | CADENA DIV IDENTIFIER | SUMUNAR DIV NUM | SUMUNAR DIV SUMUNAR | NUM DIV SUMUNAR | RESTUNAR DIV RESTUNAR | RESTUNAR DIV NUM | NUM DIV RESTUNAR | CADENA DIV CADENA;
+MODU::= NUM MOD NUM | IDENTIFIER MOD IDENTIFIER | IDENTIFIER MOD NUM | NUM MOD IDENTIFIER | NUM MOD CADENA | CADENA MOD NUM | CADENA MOD IDENTIFIER | SUMUNAR MOD NUM | SUMUNAR MOD SUMUNAR | NUM MOD SUMUNAR | RESTUNAR MOD RESTUNAR | RESTUNAR MOD NUM | NUM MOD RESTUNAR;
+POTEN::= NUM POTE NUM | IDENTIFIER POTE IDENTIFIER | IDENTIFIER POTE NUM | NUM POTE IDENTIFIER | NUM POTE CADENA | CADENA POTE NUM | CADENA POTE IDENTIFIER | SUMUNAR POTE NUM | SUMUNAR POTE SUMUNAR | NUM POTE SUMUNAR | RESTUNAR POTE RESTUNAR | RESTUNAR POTE NUM | NUM POTE RESTUNAR;
+OPARITCOMB::= SUMAR SUMA NUM | SUMAR SUMA IDENTIFIER | SUMAR SUMA CADENA | SUMAR SUMA ARRX | SUMAR SUMA MATRX | RESTAR RESTA NUM | RESTAR RESTA IDENTIFIER | RESTAR RESTA CADENA | RESTAR RESTA ARRX | RESTAR RESTA MATRX | MULTIPL MULTI NUM | MULTIPL MULTI IDENTIFIER | MULTIPL MULTI CADENA | MULTIPL MULTI ARRX | MULTIPL MULTI MATRX | DIVD DIV NUM | DIVD DIV IDENTIFIER | DIVD DIV CADENA | DIVD DIV ARRX | DIVD DIV MATRX | MODU MOD NUM | MODU MOD IDENTIFIER | MODU MOD CADENA | MODU MOD ARRX | MODU MOD MATRX | NUM SUMA SUMAR | NUM RESTA SUMAR | NUM MULTI SUMAR | NUM DIV SUMAR | NUM MOD SUMAR | IDENTIFIER SUMA SUMAR | IDENTIFIER RESTA SUMAR | IDENTIFIER MULTI SUMAR | IDENTIFIER DIV SUMAR | IDENTIFIER MOD SUMAR | CADENA SUMA SUMAR | CADENA RESTA SUMAR | CADENA MULTI SUMAR | CADENA DIV SUMAR | CADENA MOD SUMAR | ARRX SUMA SUMAR | ARRX RESTA SUMAR | ARRX MULTI SUMAR | ARRX DIV SUMAR | ARRX MOD SUMAR | MATRX SUMA SUMAR | MATRX RESTA SUMAR | MATRX MULTI SUMAR | MATRX DIV SUMAR | MATRX MOD SUMAR; 
+OPARIT::= SUMAR | RESTAR | MULTIPL | DIVD | MODU | POTEN | OPARITCOMB;
+
+//Operaciones unarias
+SUMUNAR::= SUMUN NUM | SUMUNAR IDENTIFIER;;
+RESTUNAR::= RESTUNAR NUM | RESTUNAR IDENTIFIER;
+OPUNAR::= SUMUNAR | RESTUNAR;
+
+//Operaciones logicas
+CONJUN::= BOOL CONJUNCION BOOL | IDENTIFIER CONJUNCION IDENTIFIER;
+DISYUN::= BOOL DISYUNCION BOOL | IDENTIFIER DISYUNCION IDENTIFIER;
+NEGA::= NEGA NEGA | NEGACION BOOL | IDENTIFIER NEGACION IDENTIFIER;
+OPLOGCOMB::= CONJUN CONJUNCION BOOL | CONJUN CONJUNCION IDENTIFIER | CONJUN DISYUNCION BOOL | CONJUN DISYUNCION IDENTIFIER | DISYUN DISYUNCION BOOL | DISYUN DISYUNCION IDENTIFIER | NEGA NEGACION BOOL | NEGA NEGACION IDENTIFIER | BOOL CONJUNCION OPLOGCOMB | IDENTIFIER CONJUNCION OPLOGCOMB | BOOL DISYUNCION OPLOGCOMB | IDENTIFIER DISYUNCION OPLOGCOMB;
+OPLOGIC::= CONJUN | DISYUN | NEGA | OPLOGCOMB;
+
+//Operaciones de comparacion
+COMPAR::= NUM COMPARACION NUM | IDENTIFIER COMPARACION IDENTIFIER | IDENTIFIER COMPARACION NUM | NUM COMPARACION IDENTIFIER | NUM COMPARACION CADENA | CADENA COMPARACION NUM | CADENA COMPARACION IDENTIFIER | SUMUNAR COMPARACION NUM | SUMUNAR COMPARACION SUMUNAR | NUM COMPARACION SUMUNAR | RESTUNAR COMPARACION RESTUNAR | RESTUNAR COMPARACION NUM | NUM COMPARACION RESTUNAR | CADENA COMPARACION CADENA | NUM COMPARACION ARRX | NUM COMPARACION MATRX | SUMUNAR COMPARACION ARRX | SUMUNAR COMPARACION MATRX;
+DIFER::= NUM DIFE NUM | IDENTIFIER DIFE IDENTIFIER | IDENTIFIER DIFE NUM | NUM DIFE IDENTIFIER | NUM DIFE CADENA | CADENA DIFE NUM | CADENA DIFE IDENTIFIER | SUMUNAR DIFE NUM | SUMUNAR DIFE SUMUNAR | NUM DIFE SUMUNAR | RESTUNAR DIFE RESTUNAR | RESTUNAR DIFE NUM | NUM DIFE RESTUNAR | CADENA DIFE CADENA | NUM DIFE ARRX | NUM DIFE MATRX | SUMUNAR DIFE ARRX | SUMUNAR DIFE MATRX;
+COMPMAY::= NUM MAYQUE NUM | IDENTIFIER MAYQUE IDENTIFIER | IDENTIFIER MAYQUE NUM | NUM MAYQUE IDENTIFIER | NUM MAYQUE CADENA | CADENA MAYQUE NUM | CADENA MAYQUE IDENTIFIER | SUMUNAR MAYQUE NUM | SUMUNAR MAYQUE SUMUNAR | NUM MAYQUE SUMUNAR | RESTUNAR MAYQUE RESTUNAR | RESTUNAR MAYQUE NUM | NUM MAYQUE RESTUNAR | CADENA MAYQUE CADENA | NUM MAYQUE ARRX | NUM MAYQUE MATRX | SUMUNAR MAYQUE ARRX | SUMUNAR MAYQUE MATRX;
+COMPMEN::= NUM MENQUE NUM | IDENTIFIER MENQUE IDENTIFIER | IDENTIFIER MENQUE NUM | NUM MENQUE IDENTIFIER | NUM MENQUE CADENA | CADENA MENQUE NUM | CADENA MENQUE IDENTIFIER | SUMUNAR MENQUE NUM | SUMUNAR MENQUE SUMUNAR | NUM MENQUE SUMUNAR | RESTUNAR MENQUE RESTUNAR | RESTUNAR MENQUE NUM | NUM MENQUE RESTUNAR | CADENA MENQUE CADENA | NUM MENQUE ARRX | NUM MENQUE MATRX | SUMUNAR MENQUE ARRX | SUMUNAR MENQUE MATRX;
+COMPMAYEQU::= NUM MAYEQUQUE NUM | IDENTIFIER MAYEQUQUE IDENTIFIER | IDENTIFIER MAYEQUQUE NUM | NUM MAYEQUQUE IDENTIFIER | NUM MAYEQUQUE CADENA | CADENA MAYEQUQUE NUM | CADENA MAYEQUQUE IDENTIFIER | SUMUNAR MAYEQUQUE NUM | SUMUNAR MAYEQUQUE SUMUNAR | NUM MAYEQUQUE SUMUNAR | RESTUNAR MAYEQUQUE RESTUNAR | RESTUNAR MAYEQUQUE NUM | NUM MAYEQUQUE RESTUNAR | CADENA MAYEQUQUE CADENA | NUM MAYEQUQUE ARRX | NUM MAYEQUQUE MATRX | SUMUNAR MAYEQUQUE ARRX | SUMUNAR MAYEQUQUE MATRX;
+COMPMENEQU::= NUM MENEQUQUE NUM | IDENTIFIER MENEQUQUE IDENTIFIER | IDENTIFIER MENEQUQUE NUM | NUM MENEQUQUE IDENTIFIER | NUM MENEQUQUE CADENA | CADENA MENEQUQUE NUM | CADENA MENEQUQUE IDENTIFIER | SUMUNAR MENEQUQUE NUM | SUMUNAR MENEQUQUE SUMUNAR | NUM MENEQUQUE SUMUNAR | RESTUNAR MENEQUQUE RESTUNAR | RESTUNAR MENEQUQUE NUM | NUM MENEQUQUE RESTUNAR | CADENA MENEQUQUE CADENA | NUM MENEQUQUE ARRX | NUM MENEQUQUE MATRX | SUMUNAR MENEQUQUE ARRX | SUMUNAR MENEQUQUE MATRX;    
+COMPLOGCOMB::= COMPAR COMPARACION BOOL | COMPAR COMPARACION IDENTIFIER | COMPAR DIFE BOOL | COMPAR DIFE IDENTIFIER | DIFER COMPARACION BOOL | DIFER COMPARACION IDENTIFIER | COMPAR MAYQUE BOOL | COMPAR MAYQUE IDENTIFIER | COMPAR MENQUE BOOL | COMPAR MENQUE IDENTIFIER | DIFER MAYQUE BOOL | DIFER MAYQUE
+OPRELACOMB::= COMPAR COMPARACION OPLOGIC | COMPAR DIFE OPLOGIC | DIFER COMPARACION OPLOGIC | DIFER DIFE OPLOGIC | COMPAR MAYQUE OPLOGIC | COMPAR MENQUE OPLOGIC | DIFER MAYQUE OPLOGIC | DIFER MENQUE OPLOGIC;
+OPRELAC::= COMPAR | DIFER | COMPMAY | COMPMEN | COMPMAYEQU | COMPMENEQU | OPRELACOMB;
+
+//Operaciones de todo tipo
+OPERA::= OPARIT | OPLOGIC | OPUNAR | OPRELAC | OPARITCOMB | OPLOGCOMB | OPRELACOMB;
+
+//Parametros 
+PARAM::= BOOL | FUNC | IDENTIFIER | NUM | CHAR | CADENA | ARRX | MATRX | OPERA;
+LISTAPARAM::= LISTAPARAM COMMA PARAM | COMMA PARAM;
+PARAMS::= PARAM | LISTAPARAM;
+
+//IF
+IFSTRUC::= IF PARENTIZ PARAMS PARENTDE BLOC | IF PARENTIZ PARAMS PARENTDE BLOC ELSE BLOC | IF PARENTIZ PARAMS PARENTDE BLOC ELSE IFSTRUCT | IF PARENTIZ PARAMS PARENTDE BLOC ELSE IFSTRUCT ELSE BLOC;
+ELIFSTRUC::= ELIF PARENTIZ PARAMS PARENTDE BLOC ENDBLOC | ELIFSTRUCT ELIF PARENTIZ PARAMS PARENTDE BLOC ENDBLOC;
+IFBLOC::= IFSTRUCT | ELIFSTRUCT | ELSE BLOC;;
+
+//Funciones
+FUNC::= TIPO IDENTIFIER;
+FUNC::= TIPO IDENTIFIER PARENTIZ PARAMS PARENTDE BLOC | TIPO IDENTIFIER PARENTIZ PARAMS PARENTDE BLOC RETURN PARENTIZ PARAMS PARENTDE; //FUNCIONES CON RETORNO
+FUNC::= TIPO IDENTIFIER PARENTIZ PARAMS PARENTDE BLOC RETURN PARENTIZ PARAMS PARENTDE; //FUNCIONES SIN RETORNO  
+
+//For
+FORBLOC::= FOR PARENTIZ TIPO IDENTIFIER ASIGNACION NUM PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION IDENTIFIER PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION CADENA PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION ARRX PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION MATRX PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION OPARIT PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION OPLOGIC PARENTDE BLOC | FOR PARENTIZ TIPO IDENTIFIER ASIGNACION OPRELAC PARENTDE BLOC;
+
+//Switch
+SWITCHBLOC::= SWITCH PARENTIZ IDENTIFIER PARENTDE BLOC | SWITCH PARENTIZ IDENTIFIER PARENTDE BLOC DEFAULT PARENTIZ IDENTIFIER PARENTDE BLOC | SWITCH PARENTIZ IDENTIFIER PARENTDE BLOC DEFAULT PARENTIZ IDENTIFIER PARENTDE BLOC CASEBLOC;
+SWITCHBLOC::= SWITCH PARENTIZ IDENTIFIER PARENTDE BLOC DEFAULT PARENTIZ IDENTIFIER PARENTDE BLOC CASEBLOC;
+CASEBLOC::= CASEINT DOSDOT EXPR BREAK FINLINEA;
+DEFAULT::= EXPR FINLINEA
+
+//Struct
+TIPOSTRUCT::= IDENTIFIER;
+ATTRIBUTEBLOC:: ATTRIBUTEBLOC ATTRIBUTEBLOC |INT IDENTIFIER ASIGNACION NUM | INT IDENTIFIER ASIGNACION IDENTIFIER | FLOAT IDENTIFIER ASIGNACION NUM | FLOAT IDENTIFIER ASIGNACION IDENTIFIER | CHAR IDENTIFIER ASIGNACION CHAR | CHAR IDENTIFIER ASIGNACION IDENTIFIER;
+CREASTRUCT::= STRUCT TIPOSTRUCT IDENTIFIER INITBLOC ATTRIBUTEBLOC ENDBLOC FINLINEA;
+STRUCT::== CREASTRUCT | TIPOSTRUCT IDENTIFIER INITBLOC ATTRIBUTEBLOC ENDBLOC FINLINEA;
+
+//do
+BREAK::= BREAK FINLINEA;
+DOWHILE::= DO BLOC WHILE PARENTIZ PARAMS PARENTDE FINLINEA;
+
+//Arreglos bi y multidimensionales
+CREAARRX::= INT IDENTIFIER PIPE INT PIPE FINLINEA;
+LISTAINTS::= LISTAINTS COMMA INT | COMMA INT;
+ASIGARRX::= CREAARRX ASIGNACION PIPE LISTAINTS PIPE FINLINEA;
+GETELEMNTARRX::= IDENTIFIER PARENTIZ INT PARENTDE FINLINEA;
+ASIGELEMNTARRX::= IDENTIFIER PARENTIZ INT PARENTDE ASIGNACION NUM FINLINEA;
+ARRX::= CREAARRX | ASIGARRX | GETELEMNTARRX | ASIGELEMNTARRX | IDENTIFIER PARENTIZ INT PARENTDE FINLINEA;
+
+CREAMATRX::= INT IDENTIFIER PIPE INT PIPE PIPE INT PIPE FINLINEA;   
+LISTALISTAINTS::= LISTALISTAINTS COMMA PIPE LISTAINTS PIPE | COMMA PIPE LISTAINTS PIPE;
+ASIGMATRX::= CREAMATRX ASIGNACION PIPE LISTALISTAINTS FINLINEA;
+GETELEMNTMATRX::= IDENTIFIER PARENTIZ INT PARENTDE PARENTIZ INT PARENTDE FINLINEA;
+ASIGELEMNTMATRX::= IDENTIFIER PARENTIZ INT PARENTDE PARENTIZ INT PARENTDE ASIGNACION NUM FINLINEA;
+MATRX::= CREAMATRX | ASIGMATRX | GETELEMNTMATRX | ASIGELEMNTMATRX | IDENTIFIER PARENTIZ INT PARENTDE PARENTIZ INT PARENTDE FINLINEA;
