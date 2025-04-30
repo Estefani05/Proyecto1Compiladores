@@ -8,12 +8,6 @@ import org.example.ErrorHandler;
 import org.example.ParserLexer.sym;
 import java_cup.runtime.*;
 
-/**
- * Clase principal del programa.
- * Entrada: Archivos JFlex/CUP y archivo de código fuente.
- * Salida: Archivos generados, tokens y log de errores.
- * Restricción: Las rutas y permisos deben ser válidos.
- */
 public class App {
     // Rutas constantes
     private static final String INPUT_FILE = "app/src/main/resources/ejemplo1.txt";
@@ -56,12 +50,6 @@ public class App {
 
     }
 
-     /**
-     * Analiza el archivo fuente dado.
-     * Entrada: Ruta del archivo fuente.
-     * Salida: Archivo de tokens generado.
-     * Restricción: El archivo fuente debe existir.
-     */
     private static void analizarCodigoFuente(String inputFile, String tokensFile) throws Exception {
         // Limpiar archivo de tokens previo si existe
         Files.deleteIfExists(Paths.get(tokensFile));
@@ -115,10 +103,6 @@ public class App {
         return "Hello World!";
     }
 
-    // Método principal que ejecuta el análisis léxico y sintáctico
-    // Entrada: argumentos de línea de comandos (no utilizados)
-    // Salida: análisis realizado, archivos generados, errores reportados si ocurren
-    // Restricción: los archivos requeridos deben existir y tener permisos adecuados
     public static void main(String[] args) {
         try {
             GenerarLexerParser();
