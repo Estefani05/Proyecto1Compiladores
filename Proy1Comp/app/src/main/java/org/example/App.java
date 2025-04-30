@@ -1,8 +1,9 @@
 package org.example;
-//RuntimeException Linea 933
+//RuntimeException Linea 942
 import java.nio.file.*;
 import java.io.*;
 import org.example.ParserLexer.BasicLexerCup;
+import org.example.ParserLexer.parser;
 import org.example.ErrorHandler;
 import org.example.ParserLexer.sym;
 import java_cup.runtime.*;
@@ -50,51 +51,54 @@ public class App {
     }
 
     private static void analizarCodigoFuente(String inputFile, String tokensFile) throws Exception {
-        // Limpiar archivo de tokens previo
+        // Limpiar archivo de tokens previo si existe
         Files.deleteIfExists(Paths.get(tokensFile));
+        
+        // Crear directorio para tokens si no existe
+        Files.createDirectories(Paths.get(tokensFile).getParent());
+        
+        // Ruta para el archivo de errores
+        String errorsFile = "app/src/main/resources/errors.log";
+        Files.createDirectories(Paths.get(errorsFile).getParent());
+        Files.deleteIfExists(Paths.get(errorsFile));
         
         // Leer el código fuente
         String sourceCode = FileManager.readFile(inputFile);
         System.out.println("=== CÓDIGO FUENTE ===");
         System.out.println(sourceCode);
+        System.out.println("=====================");
         
-        // Crear el lexer
+        // Crear el ErrorHandler compartido
+        ErrorHandler errorHandler = new ErrorHandler(errorsFile);
+        errorHandler.setContinueOnError(true); 
+        
         try (Reader reader = new StringReader(sourceCode)) {
+            // Crear el lexer
             BasicLexerCup lexer = new BasicLexerCup(reader);
-            ErrorHandler errorHandler = new ErrorHandler("app/src/main/resources/errors.log");
             lexer.setErrorHandler(errorHandler);
             
-            // Analizar token por token
-            Symbol token;
-            do {
-                token = lexer.next_token();
-                // El propio lexer escribe en tokens.log 
-            } while (token.sym != sym.EOF);
+            // Crear el parser y conectarlo con el lexer
+            parser p = new parser(lexer);
+            p.setErrorHandler(errorHandler);
+            
+            try {
+                System.out.println("Iniciando análisis sintáctico...");
+                Symbol parseResult = p.parse();
+                System.out.println("Análisis sintáctico completado exitosamente.");
+            } catch (Exception e) {
+                System.out.println("Análisis sintáctico completado con errores: " + e.getMessage());
+            }
+            
+            // Mostrar resultados y estadísticas de errores
+            System.out.println("\n=== RESULTADOS DEL ANÁLISIS ===");
+            System.out.println("Archivo analizado: " + inputFile);
+            System.out.println("Log de tokens: " + Paths.get(tokensFile).toAbsolutePath());
+            System.out.println("Log de errores: " + Paths.get(errorsFile).toAbsolutePath());
+            System.out.println(errorHandler.getErrorSummary());
         }
+
     }
 
-    /* 
-    public static void PruebasLexerParser() throws Exception{
-        String basePath, fullPathScanner, fullPathParser, fullPathParserII2024, fullPathParserV2;
-        MainFlexCup mfjc;
-        
-        basePath = System.getProperty("user.dir");
-        fullPathScanner = basePath+"/app/src/main/resources/ejemplo1.txt";
-        fullPathParser = basePath+"/app/src/main/resources/ejemploParser.txt";
-        fullPathParserV2 = basePath+"/app/src/main/resources/ejemploParserII2024.txt";
-        
-        fullPathParserV2 = basePath+"app/src/main/resources/ejemploParserII2024.txt";
-        //fullPathParserV2 =basePath+"app/src/main/resources/ejemploParserII2024.base.txt";
-        
-        mfjc = new MainFlexCup();
-        
-        //ejercicio de prueba scanner
-        
-        mfjc.ejercicioLexer(fullPathScanner); //lexer cup ajustado V 2024
-        
-        //mfjc.ejercicioParserV2024(fullPathParserV2024); //lexer cup ajustado V 2024
-    }
-   */
     public String getGreeting() {
         return "Hello World!";
     }
@@ -102,7 +106,6 @@ public class App {
     public static void main(String[] args) {
         try {
             GenerarLexerParser();
-            //PruebasLexerParser();
             System.out.println("Proceso completado exitosamente");
         } catch (Exception e) {
             try {
