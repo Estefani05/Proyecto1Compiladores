@@ -1,14 +1,10 @@
 package org.example.ParserLexer;
 import java_cup.runtime.*;
+import org.example.ErrorHandler;
 
-// Utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios tomados de la página de CUP
-// Cambios en parser code, init with y scan with {: ...
-
+// Utiliza class BasicLexerCupV que genera el lexer.jflex
 action code {:
-    /*CODIGO DE JAVA
-    https://www.jflex.de/
-    http://www2.cs.tum.edu/projects/cup/examples.php*/
-
+    /* CÓDIGO DE JAVA */
     public void hola(){
         System.out.println("Inicio Cup");
     }
@@ -21,52 +17,194 @@ action code {:
 parser code {:
     // Conectar este parser con un scanner
     BasicLexerCup lex;
+    
+    // Variables para manejo de errores
+    public int errorCount = 0;
+    private ErrorHandler errorHandler;
+    
+    // Método para establecer el ErrorHandler
+    public void setErrorHandler(ErrorHandler handler) {
+        this.errorHandler = handler;
+    }
+    
+    // Método para reportar errores
+    public void report_error(String message, Object info) {
+        StringBuilder errorMessage = new StringBuilder();
+        int line = 0;
+        int column = 0;
+        
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+            if (s.left >= 0) {
+                line = s.left + 1;
+                if (s.right >= 0) {
+                    column = s.right + 1;
+                }
+            }
+        }
+        
+        // Usar el ErrorHandler si está disponible
+        if (errorHandler != null) {
+            errorHandler.reportError(line, column, message, "SINTÁCTICO");
+        } else {
+            // Fallback al comportamiento original
+            errorMessage.append("Error sintáctico: ");
+            if (line > 0) {
+                errorMessage.append("línea " + line);
+                if (column > 0) {
+                    errorMessage.append(", columna " + column);
+                }
+            }
+            errorMessage.append(": " + message);
+            System.err.println(errorMessage.toString());
+        }
+        
+        errorCount++;
+    }
+    
+    // Método para recuperación de errores
+    public void syntax_error(Symbol cur_token) {
+        String tokenName = symbl_name_from_id(cur_token.sym);
+        String tokenValue = (cur_token.value != null) ? cur_token.value.toString() : "?";
+        
+        report_error("Error cerca de " + tokenName + " '" + tokenValue + "'", cur_token);
+        
+        // Si hay un ErrorHandler y está en pánico, detener el análisis
+        if (errorHandler != null && errorHandler.isInPanicMode() && !errorHandler.shouldContinue()) {
+            throw new RuntimeException("Análisis sintáctico abortado en modo pánico");
+        }
+    }
+    
+    // Método para errores irrecuperables
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        // Entrar en modo pánico si hay un ErrorHandler
+        if (errorHandler != null) {
+            errorHandler.enterPanicMode();
+            report_error("Error sintáctico fatal. Compilación abortada", cur_token);
+        } else {
+            report_error("Error sintáctico fatal. Compilación abortada", cur_token);
+        }
+        
+        throw new java.lang.Exception("Error sintáctico irrecuperable");
+    }
+    
+    // IMPORTANTE: Debe ser público
+    public String symbl_name_from_id(int id) {
+        return (id >= 0 && id < sym.terminalNames.length) ? 
+               sym.terminalNames[id] : "UNKNOWN_TOKEN";
+    }
 
     @SuppressWarnings("deprecation")
     public parser(BasicLexerCup lex){
         this.lex = lex;
         this.symbolFactory = new DefaultSymbolFactory();
+        
+        // Si el lexer tiene un ErrorHandler, lo usamos
+        if (lex != null) {
+            try {
+                // Usamos reflection para obtener el errorHandler del lexer
+                java.lang.reflect.Field f = lex.getClass().getDeclaredField("errorHandler");
+                f.setAccessible(true);
+                Object handler = f.get(lex);
+                if (handler instanceof ErrorHandler) {
+                    this.errorHandler = (ErrorHandler) handler;
+                    System.out.println("ErrorHandler conectado desde lexer a parser");
+                }
+            } catch (Exception e) {
+                System.err.println("No se pudo obtener ErrorHandler del lexer: " + e.getMessage());
+            }
+        }
     }
-
 :}
 
 init with {: :};
 
-/* Conectar con el scanner */
 scan with {: return lex.next_token(); :};
 
-/* Terminales (tokens retornados por el scanner). */
-terminal INTEGER_T, CHAR_T, STRING_T, COMPARACION, ASIGNA, SUMA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL; /* Generales */
-terminal INTEGER, FLOAT, BOOL, CHAR, STRING; /* Tipos */
+/* Terminales (tokens) */
+terminal INTEGER_T, CHAR_T, STRING_T, ASIGNA, FINLINEA, IDENTIFIER, INTEGER_LITERAL, STRING_LITERAL;
+terminal INT, RETURN, MAIN;
+terminal PARENTESIS_A, PARENTESIS_C, BLOQUE_A, BLOQUE_C;
+terminal SUMA, RESTA, MULTIPLICACION, DIVISION;
+terminal IGUAL, MAYOR, MENOR;
 terminal ERROR;
-terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS; /* Estructura */
-terminal BLOQUE_A, BLOQUE_C; /* Estructura */
-terminal MAIN; /* Estructura */
-terminal CORCHETE_A, CORCHETE_C; /* Simbolos */
-terminal PARENTESIS_A, PARENTESIS_C; /* Simbolos */
-terminal ASIGNACION; /* Simbolos */
-terminal DELIMITADOR; /* Simbolos */
-terminal RESTA, DIVISION, MULTIPLICACION, MODULO, POTENCIA, INCREMENTO, DECREMENTO; /* Operadores aritméticos*/
-terminal MENOR, MENOR_IGUAL, MAYOR, MAYOR_IGUAL, IGUALDAD, DIFERENTE; /* Operadores relacionales */
-terminal CONJUNCION, DISYUNCION, NEGACION; /* Operadores logicos */
-terminal IF, ELSE, WHILE, FOR, SWITCH, CASE, DEFAULT, BREAK, RETURN, DOS_PUNTOS;
-terminal PRINT, READ; /* Operaciones de lectura */
 
-// no terminales
-non terminal programa, lineas, linea, tipos, literal;
+/* Terminales no usados pero declarados para completitud */
+terminal FLOAT, BOOL, CHAR, STRING, COMPARACION;
+terminal COMENTARIO_LINEA, COMENTARIO_VARIAS_LINEAS;
+terminal CORCHETE_A, CORCHETE_C, ASIGNACION, DELIMITADOR;
+terminal MODULO, POTENCIA, INCREMENTO, DECREMENTO;
+terminal MENOR_IGUAL, MAYOR_IGUAL, IGUALDAD, DIFERENTE;
+terminal CONJUNCION, DISYUNCION, NEGACION;
+terminal IF, ELSE, WHILE, FOR, SWITCH, CASE, DEFAULT, BREAK, DOS_PUNTOS;
+terminal PRINT, READ;
 
-//produccion de inicio
+/* No terminales */
+non terminal programa, declaraciones, declaracion, tipo_dato, funcion_main, bloque, sentencias, sentencia;
+non terminal expresion, termino, factor;
+
+/* Precedencias para operadores */
+precedence left SUMA, RESTA;
+precedence left MULTIPLICACION, DIVISION;
+precedence left IGUAL, MAYOR, MENOR;
+
+/* Producción inicial */
 start with programa;
 
-programa ::= {: hola();:} lineas {: adios();:} ;
-tipos ::= INTEGER_T | STRING_T | CHAR_T ;
-literal ::= INTEGER_LITERAL | STRING_LITERAL;
-lineas ::= linea ;
-lineas ::= lineas linea ;
-linea ::= tipos IDENTIFIER ASIGNA literal FINLINEA;
+/* Definición de la gramática */
+programa ::= {: hola(); :} declaraciones {: adios(); :}
+          | /* vacío */ {: hola(); adios(); :} ;
 
-programaAux ::= 
-    /* Puedes definir aquí las reglas para el cuerpo del programa */
-    ;
+declaraciones ::= declaracion
+                | declaraciones declaracion;
 
-/* Estructuras de control */
+declaracion ::= funcion_main
+              | tipo_dato IDENTIFIER ASIGNA expresion FINLINEA
+              | tipo_dato IDENTIFIER FINLINEA
+              | error FINLINEA {:
+                    parser.report_error("Error en la sintaxis de declaración", null);
+                    :} ;
+
+tipo_dato ::= INTEGER_T
+            | CHAR_T
+            | STRING_T
+            | INT ;
+
+funcion_main ::= INT MAIN PARENTESIS_A PARENTESIS_C bloque 
+               | error PARENTESIS_C bloque {:
+                    parser.report_error("Error en la declaración de la función main", null);
+                    :} ;
+
+bloque ::= BLOQUE_A sentencias BLOQUE_C
+         | BLOQUE_A BLOQUE_C 
+         | error {:
+              parser.report_error("Error en el bloque de código", null);
+              :} BLOQUE_C;
+
+sentencias ::= sentencia
+             | sentencias sentencia;
+
+sentencia ::= tipo_dato IDENTIFIER ASIGNA expresion FINLINEA
+            | RETURN expresion FINLINEA
+            | error FINLINEA {:
+                parser.report_error("Error en sentencia", null);
+                :}
+            | tipo_dato error FINLINEA {:
+                parser.report_error("Error en declaración de variable", null);
+                :} ;
+
+expresion ::= termino
+            | expresion SUMA termino
+            | expresion RESTA termino
+            | expresion IGUAL termino
+            | expresion MAYOR termino
+            | expresion MENOR termino;
+
+termino ::= factor
+          | termino MULTIPLICACION factor
+          | termino DIVISION factor;
+
+factor ::= INTEGER_LITERAL
+         | STRING_LITERAL
+         | IDENTIFIER
+         | PARENTESIS_A expresion PARENTESIS_C;
