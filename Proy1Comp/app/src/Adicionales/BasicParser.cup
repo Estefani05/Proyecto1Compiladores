@@ -1,46 +1,136 @@
 package org.example.ParserLexer;
 import java_cup.runtime.*;
-
-import java.util.HashMap; // import the HashMap class
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-// Utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios tomados de la página de CUP
-// Cambios en parser code, init with y scan with {: ...
-
-action code {:
-    /*CODIGO DE JAVA
-    https://www.jflex.de/
-    http://www2.cs.tum.edu/projects/cup/examples.php*/
-
-    public void hola(){
-        System.out.println("Inicio Cup");
-    }
-
-    public void adios(){
-        System.out.println("Fin Cup");
-    }
-:}
-
-parser code {:
-    // Conectar este parser con un scanner
-    BasicLexerCup lex;
-
-    @SuppressWarnings("deprecation")
-    public parser(BasicLexerCup lex){
-        this.lex = lex;
-        this.symbolFactory = new DefaultSymbolFactory();
-    }
-
-:}
+ import org.example.ErrorHandler;
+ 
+ // Utiliza class BasicLexerCupV que genera el lexer.jflex
+ import java.util.HashMap; // import the HashMap class
+ import java.util.List;
+ import java.util.ArrayList;
+ import java.io.IOException;
+ import java.io.FileReader;
+ import java.io.FileWriter;
+ import java.io.BufferedReader;
+ import java.io.BufferedWriter;
+ import java.nio.file.Files;
+ import java.nio.file.Path;
+ import java.nio.file.Paths;
+ 
+ // Utiliza class BasicLexerCupV que genera el lexer.jflex, pequeños cambios tomados de la página de CUP
+ // Cambios en parser code, init with y scan with {: ...
+ 
+ action code {:
+     /* CÓDIGO DE JAVA */
+     /*CODIGO DE JAVA
+     https://www.jflex.de/
+     http://www2.cs.tum.edu/projects/cup/examples.php*/
+ 
+     public void hola(){
+         System.out.println("Inicio Cup");
+     }
+ @@ -17,194 +33,176 @@ action code {:
+ parser code {:
+     // Conectar este parser con un scanner
+     BasicLexerCup lex;
+     
+     // Variables para manejo de errores
+     public int errorCount = 0;
+     private ErrorHandler errorHandler;
+     
+     // Método para establecer el ErrorHandler
+     public void setErrorHandler(ErrorHandler handler) {
+         this.errorHandler = handler;
+     }
+     
+     // Método para reportar errores
+     public void report_error(String message, Object info) {
+         StringBuilder errorMessage = new StringBuilder();
+         int line = 0;
+         int column = 0;
+         
+         if (info instanceof java_cup.runtime.Symbol) {
+             java_cup.runtime.Symbol s = (java_cup.runtime.Symbol) info;
+             if (s.left >= 0) {
+                 line = s.left + 1;
+                 if (s.right >= 0) {
+                     column = s.right + 1;
+                 }
+             }
+         }
+         
+         // Usar el ErrorHandler si está disponible
+         if (errorHandler != null) {
+             errorHandler.reportError(line, column, message, "SINTÁCTICO");
+         } else {
+             // Fallback al comportamiento original
+             errorMessage.append("Error sintáctico: ");
+             if (line > 0) {
+                 errorMessage.append("línea " + line);
+                 if (column > 0) {
+                     errorMessage.append(", columna " + column);
+                 }
+             }
+             errorMessage.append(": " + message);
+             System.err.println(errorMessage.toString());
+         }
+         
+         errorCount++;
+     }
+     
+     // Método para recuperación de errores
+     public void syntax_error(Symbol cur_token) {
+         String tokenName = symbl_name_from_id(cur_token.sym);
+         String tokenValue = (cur_token.value != null) ? cur_token.value.toString() : "?";
+         
+         report_error("Error cerca de " + tokenName + " '" + tokenValue + "'", cur_token);
+         
+         // Si hay un ErrorHandler y está en pánico, detener el análisis
+         if (errorHandler != null && errorHandler.isInPanicMode() && !errorHandler.shouldContinue()) {
+             throw new RuntimeException("Análisis sintáctico abortado en modo pánico");
+         }
+     }
+     
+     // Método para errores irrecuperables
+     public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+         // Entrar en modo pánico si hay un ErrorHandler
+         if (errorHandler != null) {
+             errorHandler.enterPanicMode();
+             report_error("Error sintáctico fatal. Compilación abortada", cur_token);
+         } else {
+             report_error("Error sintáctico fatal. Compilación abortada", cur_token);
+         }
+         
+         throw new java.lang.Exception("Error sintáctico irrecuperable");
+     }
+     
+     // IMPORTANTE: Debe ser público
+     public String symbl_name_from_id(int id) {
+         return (id >= 0 && id < sym.terminalNames.length) ? 
+                sym.terminalNames[id] : "UNKNOWN_TOKEN";
+     }
+ 
+     @SuppressWarnings("deprecation")
+     public parser(BasicLexerCup lex){
+         this.lex = lex;
+         this.symbolFactory = new DefaultSymbolFactory();
+         
+         // Si el lexer tiene un ErrorHandler, lo usamos
+         if (lex != null) {
+             try {
+                 // Usamos reflection para obtener el errorHandler del lexer
+                 java.lang.reflect.Field f = lex.getClass().getDeclaredField("errorHandler");
+                 f.setAccessible(true);
+                 Object handler = f.get(lex);
+                 if (handler instanceof ErrorHandler) {
+                     this.errorHandler = (ErrorHandler) handler;
+                     System.out.println("ErrorHandler conectado desde lexer a parser");
+                 }
+             } catch (Exception e) {
+                 System.err.println("No se pudo obtener ErrorHandler del lexer: " + e.getMessage());
+             }
+         }
+     }
+ 
+ :}
 
 init with {: :};
 
