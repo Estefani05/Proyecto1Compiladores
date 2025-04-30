@@ -14,28 +14,41 @@ import jflex.exceptions.SilentExit;
 
 public class MainFlexCup {
 
+    // Inicializa el análisis léxico y sintáctico con las rutas dadas
+    // Entrada: ruta del archivo .jflex y del archivo .cup
+    // Salida: archivos del lexer y parser generados
     public void iniLexerParser(String rutaLexer, String rutaParser) throws internal_error, Exception {
         GenerateLexer(rutaLexer);
         Generateparser(rutaParser);
     }
 
-    //Genera el archivo del lexer
+   // Genera el archivo del lexer usando JFlex
+   // Entrada: ruta del archivo .jflex
+   // Salida: archivo Java generado del lexer
     public void GenerateLexer(String ruta) throws IOException, SilentExit{
         String[] strArr = {ruta};
         jflex.Main.generate(strArr);
     }
 
+    // Crea una instancia del parser con el lexer dado
+    // Entrada: instancia de BasicLexerCup
+    // Salida: instancia del parser con el lexer conectado
     public parser crearParser(BasicLexerCup lexer) throws Exception {
         parser p = new parser(lexer);
         return p;
     }
 
-    //Genera los archivos del parser
+    // Genera los archivos del parser usando CUP
+    // Entrada: ruta del archivo .cup
+    // Salida: archivos Java generados del parser y símbolos
     public void Generateparser(String ruta) throws internal_error, IOException, Exception{
         String[] strArr = {ruta};
         java_cup.Main.main(strArr);
     }
-
+    
+    // Ejecuta el lexer sobre un archivo para imprimir los tokens encontrados
+    // Entrada: ruta del archivo fuente a escanear
+    // Salida: tokens leídos impresos en consola
     public void ejercicioLexer(String rutaScanear) throws IOException
     {
         Reader reader = new BufferedReader(new FileReader (rutaScanear));
