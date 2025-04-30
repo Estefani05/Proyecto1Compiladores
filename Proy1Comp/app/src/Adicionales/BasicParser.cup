@@ -37,11 +37,15 @@ import java_cup.runtime.*;
      private ErrorHandler errorHandler;
      
      // Método para establecer el ErrorHandler
+     // Entrada: instancia de ErrorHandler
+     // Salida: Asigna el handler al parser
      public void setErrorHandler(ErrorHandler handler) {
          this.errorHandler = handler;
      }
      
      // Método para reportar errores
+     // Entrada: mensaje de error y símbolo actual
+     // Salida: Error registrado en consola o ErrorHandler
      public void report_error(String message, Object info) {
          StringBuilder errorMessage = new StringBuilder();
          int line = 0;
@@ -76,7 +80,9 @@ import java_cup.runtime.*;
          errorCount++;
      }
      
-     // Método para recuperación de errores
+     // Método para recuperación de errores sintácticos
+     // Entrada: símbolo actual en el cual ocurrió el error
+     // Salida: Reporte de error por consola o ErrorHandler
      public void syntax_error(Symbol cur_token) {
          String tokenName = symbl_name_from_id(cur_token.sym);
          String tokenValue = (cur_token.value != null) ? cur_token.value.toString() : "?";
@@ -89,7 +95,9 @@ import java_cup.runtime.*;
          }
      }
      
-     // Método para errores irrecuperables
+     // Método para errores sintácticos irrecuperables
+     // Entrada: símbolo en el cual falló irrecuperablemente
+     // Salida: Lanza excepción para abortar el análisis
      public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
          // Entrar en modo pánico si hay un ErrorHandler
          if (errorHandler != null) {
@@ -102,7 +110,9 @@ import java_cup.runtime.*;
          throw new java.lang.Exception("Error sintáctico irrecuperable");
      }
      
-     // IMPORTANTE: Debe ser público
+     // Método auxiliar para obtener el nombre textual de un token
+     // Entrada: id del token (int)
+     // Salida: nombre del token (String)
      public String symbl_name_from_id(int id) {
          return (id >= 0 && id < sym.terminalNames.length) ? 
                 sym.terminalNames[id] : "UNKNOWN_TOKEN";
