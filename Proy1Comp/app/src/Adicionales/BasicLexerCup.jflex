@@ -37,7 +37,9 @@ import org.example.ErrorHandler;
         }
     }
 
-    // Método para inicializar el logger
+    // Método para inicializar el logger de tokens
+    // Entrada: Ninguna
+    // Salida: Archivo "tokens.log"
     private void initTokenLogger() {
         try {
             tokenWriter = new FileWriter("app/src/main/resources/tokens.log");
@@ -69,12 +71,18 @@ import org.example.ErrorHandler;
         }
     }
 
+    // Método para agregar un símbolo a la tabla
+    // Entrada: nombre y tipo del símbolo
+    // Salida: símbolo registrado si no existía previamente
     private void agregarSimbolo(String nombre, String tipo) {
         if (!tablaSimbolos.containsKey(nombre)) {
             tablaSimbolos.put(nombre, new Simbolo(nombre, tipo, yyline + 1, yycolumn + 1));
         }
     }
 
+    // Método para exportar la tabla de símbolos a un archivo
+    // Entrada: ninguna
+    // Salida: archivo "tabla_simbolos.log" generado con los símbolos registrados
     public void exportarTablaSimbolos() {
         try (FileWriter writer = new FileWriter("app/src/main/resources/tabla_simbolos.log")) {
             writer.write("=== TABLA DE SÍMBOLOS ===\n");
@@ -92,6 +100,9 @@ import org.example.ErrorHandler;
         }
     }
 
+    // Método para crear un símbolo con tipo dado
+    // Entrada: tipo del token (int)
+    // Salida: objeto Symbol con línea y columna actuales
     private Symbol symbol(int type) {
         String tokenName = (type >= 0 && type < sym.terminalNames.length) ? sym.terminalNames[type] : "UNKNOWN";
         logToken(tokenName, yytext());
@@ -104,7 +115,9 @@ import org.example.ErrorHandler;
         return new Symbol(type, yyline, yycolumn, value);
     }
 
-    // Método para cerrar el archivo y exportar tabla de símbolos
+  // Método para cerrar el logger de tokens y exportar la tabla de símbolos
+  // Entrada: ninguna
+  // Salida: archivo de tokens cerrado y tabla de símbolos exportada
     public void closeTokenLogger() {
         if (tokenWriter != null) {
             try {
